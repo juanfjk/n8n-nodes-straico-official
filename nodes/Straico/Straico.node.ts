@@ -7,7 +7,7 @@ export class Straico implements INodeType {
 		icon: 'file:straico.svg',
 		group: ['transform'],
 		version: 1,
-		subtitle: 'Get Straico',
+		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',	
 		description: 'Get data from Straico API',
 		defaults: {
 				name: 'Straico default',
