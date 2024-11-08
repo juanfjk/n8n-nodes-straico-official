@@ -21,7 +21,7 @@ export class Straico implements INodeType {
       },
     ],
     requestDefaults: {
-      baseURL: 'https://api.straico.com/v0',
+      baseURL: 'https://api.straico.com',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export class Straico implements INodeType {
             routing: {
               request: {
                 method: 'GET',
-                url: '/user',
+                url: '/v0/user',
               },
             },
           },
@@ -96,7 +96,7 @@ export class Straico implements INodeType {
             routing: {
               request: {
                 method: 'GET',
-                url: '/models',
+                url: '/v1/models',
               },
             },
           },
@@ -121,7 +121,7 @@ export class Straico implements INodeType {
             routing: {
               request: {
                 method: 'POST',
-                url: '/prompt/completion',
+                url: '/v1/prompt/completion',
               },
             },
           },
@@ -129,10 +129,10 @@ export class Straico implements INodeType {
         default: 'completion',
       },
       {
-        displayName: 'Model',
-        name: 'model',
-        type: 'string',
-        default: 'anthropic/claude-3-haiku:beta',
+        displayName: 'Models',
+        name: 'models',
+        type: 'multiOptions',
+        default: ['anthropic/claude-3-haiku:beta'],
         required: true,
         displayOptions: {
           show: {
@@ -140,10 +140,160 @@ export class Straico implements INodeType {
             operation: ['completion'],
           },
         },
+        options: [
+          {
+            name: 'Anthropic: Claude 3 Haiku',
+            value: 'anthropic/claude-3-haiku:beta',
+          },
+          {
+            name: 'Anthropic: Claude 3 Opus',
+            value: 'anthropic/claude-3-opus',
+          },
+          {
+            name: 'Anthropic: Claude 3 Sonnet',
+            value: 'anthropic/claude-3-sonnet',
+          },
+          {
+            name: 'Anthropic: Claude 3.5 Sonnet',
+            value: 'anthropic/claude-3.5-sonnet',
+          },
+          {
+            name: 'Cohere: Command R (08-2024)',
+            value: 'cohere/command-r-08-2024',
+          },
+          {
+            name: 'Cohere: Command R+ (08-2024)',
+            value: 'cohere/command-r-plus-08-2024',
+          },
+          {
+            name: 'Dolphin 2.6 Mixtral 8x7B',
+            value: 'cognitivecomputations/dolphin-mixtral-8x7b',
+          },
+          {
+            name: 'EVA Qwen2.5 14B',
+            value: 'eva-unit-01/eva-qwen-2.5-14b',
+          },
+          {
+            name: 'Goliath 120B',
+            value: 'alpindale/goliath-120b',
+          },
+          {
+            name: 'Google: Gemini Pro 1.5',
+            value: 'google/gemini-pro-1.5',
+          },
+          {
+            name: 'Google: Gemma 2 27B',
+            value: 'google/gemma-2-27b-it',
+          },
+          {
+            name: 'Gryphe: MythoMax L2 13B 8k',
+            value: 'gryphe/mythomax-l2-13b',
+          },
+          {
+            name: 'Meta: Llama 3 70B Instruct (nitro)',
+            value: 'meta-llama/llama-3-70b-instruct:nitro',
+          },
+          {
+            name: 'Meta: Llama 3 8B Instruct',
+            value: 'meta-llama/llama-3-8b-instruct',
+          },
+          {
+            name: 'Meta: Llama 3.1 405B Instruct',
+            value: 'meta-llama/llama-3.1-405b-instruct',
+          },
+          {
+            name: 'Meta: Llama 3.1 70B Instruct',
+            value: 'meta-llama/llama-3.1-70b-instruct',
+          },
+          {
+            name: 'Mistral: Codestral Mamba',
+            value: 'mistralai/codestral-mamba',
+          },
+          {
+            name: 'Mistral: Large',
+            value: 'mistralai/mistral-large',
+          },
+          {
+            name: 'Mistral: Mixtral 8x7B',
+            value: 'mistralai/mixtral-8x7b-instruct',
+          },
+          {
+            name: 'NVIDIA: Llama 3.1 Nemotron 70B Instruct',
+            value: 'nvidia/llama-3.1-nemotron-70b-instruct',
+          },
+          {
+            name: 'Nous: Hermes 3 405B Instruct',
+            value: 'nousresearch/hermes-3-llama-3.1-405b',
+          },
+          {
+            name: 'OpenAI: GPT-3.5 Turbo 16k',
+            value: 'openai/gpt-3.5-turbo-0125',
+          },
+          {
+            name: 'OpenAI: GPT-4',
+            value: 'openai/gpt-4',
+          },
+          {
+            name: 'OpenAI: GPT-4 Turbo 128k',
+            value: 'openai/gpt-4-turbo-2024-04-09',
+          },
+          {
+            name: 'OpenAI: GPT-4 Vision',
+            value: 'openai/gpt-4-vision-preview',
+          },
+          {
+            name: 'OpenAI: GPT-4o - New (Aug-06)',
+            value: 'openai/gpt-4o-2024-08-06',
+          },
+          {
+            name: 'OpenAI: GPT-4o - Old',
+            value: 'openai/gpt-4o',
+          },
+          {
+            name: 'OpenAI: GPT-4o mini',
+            value: 'openai/gpt-4o-mini',
+          },
+          {
+            name: 'OpenAI: o1-mini (Beta)',
+            value: 'openai/o1-mini',
+          },
+          {
+            name: 'OpenAI: o1-preview (Beta)',
+            value: 'openai/o1-preview',
+          },
+          {
+            name: 'Perplexity: Llama 3.1 Sonar 405B Online',
+            value: 'perplexity/llama-3.1-sonar-huge-128k-online',
+          },
+          {
+            name: 'Perplexity: Llama 3.1 Sonar 70B Online',
+            value: 'perplexity/llama-3.1-sonar-large-128k-online',
+          },
+          {
+            name: 'Perplexity: Llama 3.1 Sonar 8B Online',
+            value: 'perplexity/llama-3.1-sonar-small-128k-online',
+          },
+          {
+            name: 'Qwen 2 72B Instruct',
+            value: 'qwen/qwen-2-72b-instruct',
+          },
+          {
+            name: 'Qwen2-VL 72B Instruct',
+            value: 'qwen/qwen-2-vl-72b-instruct',
+          },
+          {
+            name: 'Qwen2.5 72B Instruct',
+            value: 'qwen/qwen-2.5-72b-instruct',
+          },
+          {
+            name: 'xAI: Grok Beta',
+            value: 'x-ai/grok-beta',
+          },
+        ],
         routing: {
           request: {
             body: {
-              model: '={{ $value }}',
+              models: '={{ $value }}',
             },
           },
         },
@@ -182,11 +332,39 @@ export class Straico implements INodeType {
         },
         options: [
           {
+            displayName: 'File URLs',
+            name: 'file_urls',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated list of file URLs to analyze',
+            routing: {
+              request: {
+                body: {
+                  file_urls: '={{ $value.split(",").map(url => url.trim()) }}',
+                },
+              },
+            },
+          },
+          {
+            displayName: 'YouTube URLs',
+            name: 'youtube_urls',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated list of YouTube URLs to analyze',
+            routing: {
+              request: {
+                body: {
+                  youtube_urls: '={{ $value.split(",").map(url => url.trim()) }}',
+                },
+              },
+            },
+          },
+          {
             displayName: 'Temperature',
             name: 'temperature',
             type: 'number',
             default: 0.7,
-            description: 'Controls the creativity and diversity of the generated text. Higher values lead to more creative but less coherent text.',
+            description: 'Controls creativity and diversity of generated text',
             typeOptions: {
               minValue: 0,
               maxValue: 2,
@@ -204,7 +382,7 @@ export class Straico implements INodeType {
             name: 'max_tokens',
             type: 'number',
             default: 100,
-            description: 'The maximum number of tokens to generate in the completion.',
+            description: 'Maximum tokens to generate',
             typeOptions: {
               minValue: 1,
               maxValue: 2048,
@@ -219,7 +397,7 @@ export class Straico implements INodeType {
           },
         ],
       },
-     {
+      {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
@@ -237,7 +415,7 @@ export class Straico implements INodeType {
             routing: {
               request: {
                 method: 'POST',
-                url: '/image/generation',
+                url: '/v0/image/generation',
               },
             },
           },
@@ -289,9 +467,18 @@ export class Straico implements INodeType {
         name: 'size',
         type: 'options',
         options: [
-          { name: 'Square', value: 'square' },
-          { name: 'Landscape', value: 'landscape' },
-          { name: 'Portrait', value: 'portrait' },
+          {
+            name: 'Square',
+            value: 'square',
+          },
+          {
+            name: 'Landscape',
+            value: 'landscape',
+          },
+          {
+            name: 'Portrait',
+            value: 'portrait',
+          },
         ],
         default: 'landscape',
         required: true,
