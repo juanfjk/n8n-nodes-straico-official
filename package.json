@@ -1,6 +1,6 @@
 {
-  "name": "n8n-nodes-straico",
-  "version": "0.1.0",
+  "name": "n8n-nodes-straico-v1",
+  "version": "0.2.2",
   "description": "n8n node for Straico API integration",
   "keywords": [
     "n8n-community-node-package"
@@ -8,12 +8,12 @@
   "license": "MIT",
   "homepage": "",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Hung Nguyen",
+    "email": "hungtidus@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hungtidus/n8n-nodes-straico.git"
+    "url": "git+https://github.com/hungtidus/n8n-nodes-straico.git"
   },
   "main": "index.js",
   "types": "src/type/custom.d.ts",

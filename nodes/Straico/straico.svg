@@ -1,11 +1,20 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 24 24" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
- <g transform="translate(0 -1028.4)">
-  <g>
-   <path d="m7 1028.4-5 12h8l-4 10 14-14h-9l6-8z" fill="#f1c40f"/>
-   <path fill="#f39c12" d="m7 1028.4-5 12h3l5-12zm3 12-4 10 3-3 4-7z"/>
-   <path fill="#e67e22" d="m10 1040.4-0.4062 1h2.9062l0.5-1h-3z"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #e57a44;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Text">
+    <g>
+      <rect class="cls-2" width="512" height="512"/>
+      <polygon class="cls-1" points="448 128 341.33 128 405.33 0 234.67 0 64 341.33 192 341.33 192 512 448 128"/>
+    </g>
   </g>
- </g>
 </svg>
