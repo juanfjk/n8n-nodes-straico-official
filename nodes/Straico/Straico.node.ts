@@ -1,4 +1,5 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
+import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 
 export class Straico implements INodeType {
   description: INodeTypeDescription = {
@@ -10,7 +11,7 @@ export class Straico implements INodeType {
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Get data from Straico API',
     defaults: {
-      name: 'Straico default',
+      name: 'Straico',
     },
     inputs: ['main'],
     outputs: ['main'],
@@ -132,6 +133,9 @@ export class Straico implements INodeType {
         displayName: 'Models',
         name: 'models',
         type: 'multiOptions',
+        typeOptions: {
+					loadOptionsMethod: 'getModels',
+				},
         default: ['anthropic/claude-3-haiku:beta'],
         required: true,
         displayOptions: {
@@ -140,7 +144,7 @@ export class Straico implements INodeType {
             operation: ['completion'],
           },
         },
-        options: [
+/*         options: [
           {
             name: 'Anthropic: Claude 3 Haiku',
             value: 'anthropic/claude-3-haiku:beta',
@@ -289,7 +293,7 @@ export class Straico implements INodeType {
             name: 'xAI: Grok Beta',
             value: 'x-ai/grok-beta',
           },
-        ],
+        ], */
         routing: {
           request: {
             body: {
@@ -522,4 +526,68 @@ export class Straico implements INodeType {
       },
     ],
   };
+
+  //add loadOptions
+/*   methods = {
+		loadOptions: {
+			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const response = await this.helpers.request({
+					method: 'GET',
+					url: '/v1/models',
+					json: true,
+				});
+
+				if (!response.success || !response.data.text) {
+					throw new Error('Failed to load models');
+				}
+
+				return response.data.text.map((model: any) => ({
+					name: model.name,
+					value: model.model,
+				}));
+			},
+		},
+	}; */
+
+  methods = {
+    loadOptions: {
+        async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+            try {
+                const credentials = await this.getCredentials('StraicoApi');
+                
+                if (!credentials?.apiKey) {
+                    throw new Error('No API key provided in credentials');
+                }
+
+                const response = await this.helpers.request({
+                    method: 'GET',
+                    url: 'https://api.straico.com/v1/models',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${credentials.apiKey}`,
+                    },
+                    json: true,
+                });
+
+                if (!response?.success || !response?.data?.chat) {
+                    throw new Error('Invalid response format from the API');
+                }
+
+                // Map the chat models from the response
+                return response.data.chat.map((model: any) => ({
+                    name: model.name,
+                    value: model.model,
+                    description: `Max tokens: ${model.max_output}, Price: ${model.pricing.coins} coins per ${model.pricing.words} words`,
+                }));
+
+            } catch (error) {
+                console.error('Error loading models:', error);
+                throw new Error(`Failed to load models: ${error.message}`);
+            }
+        },
+    },
+};
+
+
 }
