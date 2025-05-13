@@ -1,53 +1,75 @@
 {
-  "name": "n8n-nodes-straico-v1",
-  "version": "0.2.2",
-  "description": "n8n node for Straico API integration",
-  "keywords": [
-    "n8n-community-node-package"
-  ],
-  "license": "MIT",
-  "homepage": "",
-  "author": {
-    "name": "Hung Nguyen",
-    "email": "hungtidus@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hungtidus/n8n-nodes-straico.git"
-  },
-  "main": "index.js",
-  "types": "src/type/custom.d.ts",
-  "scripts": {
-    "clean": "rimraf dist",
-    "build": "npm run clean && tsc && gulp build:icons",
-    "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix"
-  },
-  "files": [
-    "dist"
-  ],
-  "n8n": {
-    "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/StraicoApi.credentials.js"
-    ],
-    "nodes": [
-      "dist/nodes/Straico/Straico.node.js"
-    ]
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.6",
-    "@types/request-promise-native": "~1.0.15",
-    "@typescript-eslint/parser": "~5.45",
-    "typescript": "~4.8.4",
-    "n8n-workflow": "~1.5.0",
-    "gulp": "^4.0.2",
-    "gulp-rename": "^2.0.0",
-    "rimraf": "^3.0.2"
-  },
-  "dependencies": {
-    "n8n-workflow": "~1.5.0"
-  }
+	"name": "n8n-nodes-straico-official",
+	"version": "1.0.0",
+	"description": "Official Straico node for n8n",
+	"keywords": [
+		"n8n-community-node-package",
+		"straico",
+		"straico-official",
+		"straico-node",
+		"straico-n8n",
+		"straico-n8n-node",
+		"straico-n8n-node-package",
+		"AI",
+		"AI-node",
+		"AI-n8n",
+		"AI-n8n-node",
+		"AI-n8n-node-package",
+		"AI Agents",
+		"AI Agents node",
+		"AI Agents n8n",
+		"AI Agents n8n-node",
+		"AI Agents n8n-node-package",
+		"Image Generation",
+		"Image Generation node",
+		"Image Generation n8n",
+		"Image Generation n8n-node",
+		"Image Generation n8n-node-package",
+		"Image Generation n8n-node-package"
+	],
+	"license": "MIT",
+	"homepage": "https://straico.com",
+	"author": {
+		"name": "Straico Official",
+		"email": "hello@straico.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/SaroM0/n8n-nodes-straico-official"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"clean": "rimraf dist",
+		"build": "npm run clean && tsc && gulp build:icons",
+		"dev": "tsc --watch",
+		"format": "prettier nodes credentials --write",
+		"lint": "eslint nodes credentials package.json",
+		"lintfix": "eslint nodes credentials package.json --fix"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/StraicoApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Straico/Straico.node.js"
+		]
+	},
+	"devDependencies": {
+		"@types/express": "^4.17.6",
+		"@types/request-promise-native": "~1.0.15",
+		"@typescript-eslint/parser": "~5.45",
+		"typescript": "~4.8.4",
+		"n8n-workflow": "~1.5.0",
+		"gulp": "^4.0.2",
+		"gulp-rename": "^2.0.0",
+		"rimraf": "^3.0.2"
+	},
+	"dependencies": {
+		"n8n-workflow": "~1.5.0"
+	}
 }
