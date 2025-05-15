@@ -619,10 +619,12 @@ export class Straico implements INodeType {
 			},
 			{
 				displayName: 'RAG ID',
-				name: 'rag',
+				name: 'ragId',
 				type: 'string',
 				required: true,
-				displayOptions: { show: { resource: ['agent'], operation: ['addRag'] } },
+				displayOptions: {
+					show: { resource: ['rag'], operation: ['get', 'update', 'delete', 'promptCompletion'] },
+				},
 				default: '',
 			},
 			{
@@ -753,13 +755,13 @@ export class Straico implements INodeType {
 				default: '',
 			},
 			{
-				displayName: 'Files',
+				displayName: 'File',
 				name: 'files',
-				description: 'Files to upload',
+				description: 'File to upload',
 				type: 'string',
 				required: true,
 				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
-				typeOptions: { multipleValues: true, file: true },
+				typeOptions: { multipleValues: false, file: true },
 				default: '',
 			},
 			{
@@ -855,7 +857,7 @@ export class Straico implements INodeType {
 			},
 			{
 				displayName: 'Name',
-				name: 'name',
+				name: 'ragName',
 				type: 'string',
 				required: true,
 				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
@@ -863,20 +865,10 @@ export class Straico implements INodeType {
 			},
 			{
 				displayName: 'Description',
-				name: 'description',
+				name: 'ragDescription',
 				type: 'string',
 				required: true,
 				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
-				default: '',
-			},
-			{
-				displayName: 'Files',
-				name: 'files',
-				description: 'Files to upload',
-				type: 'string',
-				required: true,
-				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
-				typeOptions: { multipleValues: true, file: true },
 				default: '',
 			},
 		],
@@ -983,25 +975,23 @@ export class Straico implements INodeType {
 
 				returnData.push({ json: response });
 			} else if (resource === 'rag' && operation === 'create') {
-				const name = this.getNodeParameter('name', i) as string;
-				const description = this.getNodeParameter('description', i) as string;
-				const filesParam = this.getNodeParameter('files', i) as string[];
+				const name = this.getNodeParameter('ragName', i) as string;
+				const description = this.getNodeParameter('ragDescription', i) as string;
+				const fileField = this.getNodeParameter('files', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
 				const form = new FormData();
 				form.append('name', name);
 				form.append('description', description);
-				for (const fileField of filesParam) {
-					const binaryData = items[i].binary?.[fileField];
-					if (!binaryData) {
-						throw new NodeOperationError(
-							this.getNode(),
-							`No binary data property "${fileField}" found on item!`,
-						);
-					}
-					const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
-					const fileName = binaryData.fileName || 'uploaded_file.pdf';
-					form.append('files', bufferData, fileName);
+				const binaryData = items[i].binary?.[fileField];
+				if (!binaryData) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`No binary data property "${fileField}" found on item!`,
+					);
 				}
+				const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
+				const fileName = binaryData.fileName || 'uploaded_file.pdf';
+				form.append('files', bufferData, fileName);
 				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: 'https://api.straico.com/v0/rag',
