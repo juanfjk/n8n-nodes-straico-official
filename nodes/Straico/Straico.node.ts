@@ -150,164 +150,14 @@ export class Straico implements INodeType {
 				typeOptions: {
 					loadOptionsMethod: 'getModels',
 				},
-				default: ['anthropic/claude-3-haiku:beta'],
-				required: true,
+				default: [],
+				required: false,
 				displayOptions: {
 					show: {
 						resource: ['prompt'],
 						operation: ['completion'],
 					},
 				},
-				/*         options: [
-          {
-            name: 'Anthropic: Claude 3 Haiku',
-            value: 'anthropic/claude-3-haiku:beta',
-          },
-          {
-            name: 'Anthropic: Claude 3 Opus',
-            value: 'anthropic/claude-3-opus',
-          },
-          {
-            name: 'Anthropic: Claude 3 Sonnet',
-            value: 'anthropic/claude-3-sonnet',
-          },
-          {
-            name: 'Anthropic: Claude 3.5 Sonnet',
-            value: 'anthropic/claude-3.5-sonnet',
-          },
-          {
-            name: 'Cohere: Command R (08-2024)',
-            value: 'cohere/command-r-08-2024',
-          },
-          {
-            name: 'Cohere: Command R+ (08-2024)',
-            value: 'cohere/command-r-plus-08-2024',
-          },
-          {
-            name: 'Dolphin 2.6 Mixtral 8x7B',
-            value: 'cognitivecomputations/dolphin-mixtral-8x7b',
-          },
-          {
-            name: 'EVA Qwen2.5 14B',
-            value: 'eva-unit-01/eva-qwen-2.5-14b',
-          },
-          {
-            name: 'Goliath 120B',
-            value: 'alpindale/goliath-120b',
-          },
-          {
-            name: 'Google: Gemini Pro 1.5',
-            value: 'google/gemini-pro-1.5',
-          },
-          {
-            name: 'Google: Gemma 2 27B',
-            value: 'google/gemma-2-27b-it',
-          },
-          {
-            name: 'Gryphe: MythoMax L2 13B 8k',
-            value: 'gryphe/mythomax-l2-13b',
-          },
-          {
-            name: 'Meta: Llama 3 70B Instruct (nitro)',
-            value: 'meta-llama/llama-3-70b-instruct:nitro',
-          },
-          {
-            name: 'Meta: Llama 3 8B Instruct',
-            value: 'meta-llama/llama-3-8b-instruct',
-          },
-          {
-            name: 'Meta: Llama 3.1 405B Instruct',
-            value: 'meta-llama/llama-3.1-405b-instruct',
-          },
-          {
-            name: 'Meta: Llama 3.1 70B Instruct',
-            value: 'meta-llama/llama-3.1-70b-instruct',
-          },
-          {
-            name: 'Mistral: Codestral Mamba',
-            value: 'mistralai/codestral-mamba',
-          },
-          {
-            name: 'Mistral: Large',
-            value: 'mistralai/mistral-large',
-          },
-          {
-            name: 'Mistral: Mixtral 8x7B',
-            value: 'mistralai/mixtral-8x7b-instruct',
-          },
-          {
-            name: 'NVIDIA: Llama 3.1 Nemotron 70B Instruct',
-            value: 'nvidia/llama-3.1-nemotron-70b-instruct',
-          },
-          {
-            name: 'Nous: Hermes 3 405B Instruct',
-            value: 'nousresearch/hermes-3-llama-3.1-405b',
-          },
-          {
-            name: 'OpenAI: GPT-3.5 Turbo 16k',
-            value: 'openai/gpt-3.5-turbo-0125',
-          },
-          {
-            name: 'OpenAI: GPT-4',
-            value: 'openai/gpt-4',
-          },
-          {
-            name: 'OpenAI: GPT-4 Turbo 128k',
-            value: 'openai/gpt-4-turbo-2024-04-09',
-          },
-          {
-            name: 'OpenAI: GPT-4 Vision',
-            value: 'openai/gpt-4-vision-preview',
-          },
-          {
-            name: 'OpenAI: GPT-4o - New (Aug-06)',
-            value: 'openai/gpt-4o-2024-08-06',
-          },
-          {
-            name: 'OpenAI: GPT-4o - Old',
-            value: 'openai/gpt-4o',
-          },
-          {
-            name: 'OpenAI: GPT-4o mini',
-            value: 'openai/gpt-4o-mini',
-          },
-          {
-            name: 'OpenAI: o1-mini (Beta)',
-            value: 'openai/o1-mini',
-          },
-          {
-            name: 'OpenAI: o1-preview (Beta)',
-            value: 'openai/o1-preview',
-          },
-          {
-            name: 'Perplexity: Llama 3.1 Sonar 405B Online',
-            value: 'perplexity/llama-3.1-sonar-huge-128k-online',
-          },
-          {
-            name: 'Perplexity: Llama 3.1 Sonar 70B Online',
-            value: 'perplexity/llama-3.1-sonar-large-128k-online',
-          },
-          {
-            name: 'Perplexity: Llama 3.1 Sonar 8B Online',
-            value: 'perplexity/llama-3.1-sonar-small-128k-online',
-          },
-          {
-            name: 'Qwen 2 72B Instruct',
-            value: 'qwen/qwen-2-72b-instruct',
-          },
-          {
-            name: 'Qwen2-VL 72B Instruct',
-            value: 'qwen/qwen-2-vl-72b-instruct',
-          },
-          {
-            name: 'Qwen2.5 72B Instruct',
-            value: 'qwen/qwen-2.5-72b-instruct',
-          },
-          {
-            name: 'xAI: Grok Beta',
-            value: 'x-ai/grok-beta',
-          },
-        ], */
 				routing: {
 					request: {
 						body: {
@@ -335,6 +185,44 @@ export class Straico implements INodeType {
 						},
 					},
 				},
+			},
+			{
+				displayName: 'Smart LLM Selector',
+				name: 'smart_llm_selector',
+				type: 'collection',
+				placeholder: 'Add Selector',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['prompt'],
+						operation: ['completion'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Quantity',
+						name: 'quantity',
+						type: 'number',
+						default: 1,
+						description: 'Number of models to select (1-4)',
+						typeOptions: {
+							minValue: 1,
+							maxValue: 4,
+						},
+					},
+					{
+						displayName: 'Pricing Method',
+						name: 'pricing_method',
+						type: 'options',
+						options: [
+							{ name: 'Quality', value: 'quality' },
+							{ name: 'Balance', value: 'balance' },
+							{ name: 'Budget', value: 'budget' },
+						],
+						default: 'balance',
+						description: 'Pricing strategy for model selection',
+					},
+				],
 			},
 			{
 				displayName: 'Additional Fields',
@@ -378,6 +266,20 @@ export class Straico implements INodeType {
 						},
 					},
 					{
+						displayName: 'Images',
+						name: 'images',
+						type: 'string',
+						default: '',
+						description: 'Comma-separated list of image URLs',
+						routing: {
+							request: {
+								body: {
+									images: '={{ $value.split(",").map(url => url.trim()) }}',
+								},
+							},
+						},
+					},
+					{
 						displayName: 'Temperature',
 						name: 'temperature',
 						type: 'number',
@@ -409,6 +311,34 @@ export class Straico implements INodeType {
 							request: {
 								body: {
 									max_tokens: '={{ $value }}',
+								},
+							},
+						},
+					},
+					{
+						displayName: 'Replace Failed Models',
+						name: 'replace_failed_models',
+						type: 'boolean',
+						default: false,
+						description: 'Replace failed models with similar ones if available',
+						routing: {
+							request: {
+								body: {
+									replace_failed_models: '={{ $value }}',
+								},
+							},
+						},
+					},
+					{
+						displayName: 'Display Transcripts',
+						name: 'display_transcripts',
+						type: 'boolean',
+						default: false,
+						description: 'If true, returns transcripts of the files',
+						routing: {
+							request: {
+								body: {
+									display_transcripts: '={{ $value }}',
 								},
 							},
 						},
@@ -539,6 +469,50 @@ export class Straico implements INodeType {
 				},
 			},
 			{
+				displayName: 'Seed',
+				name: 'seed',
+				type: 'number',
+				default: null,
+				description: 'Seed for reproducibility (only for flux and ideogram models)',
+				typeOptions: {
+					minValue: 0,
+					maxValue: 2147483647,
+				},
+				displayOptions: {
+					show: {
+						resource: ['image'],
+						operation: ['generate'],
+					},
+				},
+			},
+			{
+				displayName: 'Enhance Prompt',
+				name: 'enhance',
+				type: 'boolean',
+				default: false,
+				description: 'Use AI to enhance the original prompt',
+				displayOptions: {
+					show: {
+						resource: ['image'],
+						operation: ['generate'],
+					},
+				},
+			},
+			{
+				displayName: 'Custom Enhancer',
+				name: 'customEnhancer',
+				type: 'string',
+				default: '',
+				description: 'Custom instructions for the AI to enhance the prompt',
+				displayOptions: {
+					show: {
+						resource: ['image'],
+						operation: ['generate'],
+						enhance: [true],
+					},
+				},
+			},
+			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
@@ -623,7 +597,23 @@ export class Straico implements INodeType {
 				type: 'string',
 				required: true,
 				displayOptions: {
-					show: { resource: ['rag'], operation: ['get', 'update', 'delete', 'promptCompletion'] },
+					show: {
+						resource: ['rag'],
+						operation: ['get', 'update', 'delete', 'promptCompletion'],
+					},
+				},
+				default: '',
+			},
+			{
+				displayName: 'RAG ID',
+				name: 'ragId',
+				type: 'string',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['addRag'],
+					},
 				},
 				default: '',
 			},
@@ -760,7 +750,7 @@ export class Straico implements INodeType {
 				description: 'File to upload',
 				type: 'string',
 				required: true,
-				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
+				displayOptions: { show: { resource: ['rag'], operation: ['create', 'update'] } },
 				typeOptions: { multipleValues: false, file: true },
 				default: '',
 			},
@@ -1025,21 +1015,19 @@ export class Straico implements INodeType {
 				returnData.push({ json: response });
 			} else if (resource === 'rag' && operation === 'update') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
-				const filesParam = this.getNodeParameter('files', i) as string[];
+				const fileField = this.getNodeParameter('files', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
 				const form = new FormData();
-				for (const fileField of filesParam) {
-					const binaryData = items[i].binary?.[fileField];
-					if (!binaryData) {
-						throw new NodeOperationError(
-							this.getNode(),
-							`No binary data property "${fileField}" found on item!`,
-						);
-					}
-					const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
-					const fileName = binaryData.fileName || 'uploaded_file.pdf';
-					form.append('files', bufferData, fileName);
+				const binaryData = items[i].binary?.[fileField];
+				if (!binaryData) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`No binary data property "${fileField}" found on item!`,
+					);
 				}
+				const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
+				const fileName = binaryData.fileName || 'uploaded_file.pdf';
+				form.append('files', bufferData, fileName);
 				const response = await this.helpers.httpRequest({
 					method: 'PUT',
 					url: `https://api.straico.com/v0/rag/${ragId}`,
@@ -1141,6 +1129,198 @@ export class Straico implements INodeType {
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
 					body,
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'user' && operation === 'get') {
+				const credentials = await this.getCredentials('StraicoApi');
+				const response = await this.helpers.httpRequest({
+					method: 'GET',
+					url: 'https://api.straico.com/v0/user',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'models' && operation === 'getAll') {
+				const credentials = await this.getCredentials('StraicoApi');
+				const response = await this.helpers.httpRequest({
+					method: 'GET',
+					url: 'https://api.straico.com/v1/models',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+				});
+				if (response.data) {
+					// Procesar modelos de chat
+					if (Array.isArray(response.data.chat)) {
+						for (const model of response.data.chat) {
+							returnData.push({ json: { ...model, type: 'chat' } });
+						}
+					}
+					// Procesar modelos de imagen (puede ser array de arrays)
+					if (Array.isArray(response.data.image)) {
+						for (const imageGroup of response.data.image) {
+							if (Array.isArray(imageGroup)) {
+								for (const model of imageGroup) {
+									returnData.push({ json: { ...model, type: 'image' } });
+								}
+							} else if (imageGroup) {
+								returnData.push({ json: { ...imageGroup, type: 'image' } });
+							}
+						}
+					}
+				} else {
+					returnData.push({ json: response });
+				}
+			} else if (resource === 'prompt' && operation === 'completion') {
+				const models = this.getNodeParameter('models', i, []);
+				const smartLlmSelector = this.getNodeParameter('smart_llm_selector', i, undefined);
+				const message = this.getNodeParameter('message', i);
+				const additionalFields = this.getNodeParameter('additionalFields', i, {});
+				const credentials = await this.getCredentials('StraicoApi');
+
+				// Validación exclusiva
+				const hasModels = Array.isArray(models) && models.length > 0;
+				const isSmartSelectorObj =
+					smartLlmSelector &&
+					typeof smartLlmSelector === 'object' &&
+					!Array.isArray(smartLlmSelector);
+				const hasSmartSelector =
+					isSmartSelectorObj &&
+					('quantity' in smartLlmSelector || 'pricing_method' in smartLlmSelector);
+				if (!hasModels && !hasSmartSelector) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'You must provide either models or smart_llm_selector.',
+					);
+				}
+				if (hasModels && hasSmartSelector) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'You cannot provide both models and smart_llm_selector.',
+					);
+				}
+
+				const body: any = {
+					message,
+					...additionalFields,
+				};
+				if (hasModels) {
+					body.models = models;
+				}
+				if (hasSmartSelector) {
+					body.smart_llm_selector = smartLlmSelector;
+				}
+
+				const response = await this.helpers.httpRequest({
+					method: 'POST',
+					url: 'https://api.straico.com/v1/prompt/completion',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/json',
+					},
+					body,
+					json: true,
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'image' && operation === 'generate') {
+				const model = this.getNodeParameter('model', i);
+				const description = this.getNodeParameter('description', i);
+				const size = this.getNodeParameter('size', i);
+				const variations = this.getNodeParameter('variations', i);
+				const seed = this.getNodeParameter('seed', i, undefined);
+				const enhanceValue = Boolean(this.getNodeParameter('enhance', i, false));
+				let customEnhancer;
+				if (enhanceValue === true) {
+					customEnhancer = this.getNodeParameter('customEnhancer', i, undefined);
+				}
+				const credentials = await this.getCredentials('StraicoApi');
+				const body: any = {
+					model,
+					description,
+					size,
+					variations,
+				};
+				if (
+					seed !== undefined &&
+					seed !== null &&
+					typeof model === 'string' &&
+					(model.startsWith('flux') || model.startsWith('ideogram'))
+				) {
+					body.seed = seed;
+				}
+				if (enhanceValue === true) {
+					body.enhance = true;
+					if (customEnhancer) body.customEnhancer = customEnhancer;
+				}
+				const response = await this.helpers.httpRequest({
+					method: 'POST',
+					url: 'https://api.straico.com/v0/image/generation',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/json',
+					},
+					body,
+					json: true,
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'file' && operation !== 'upload') {
+				// Implementa aquí otras operaciones de file si existen
+				returnData.push({ json: { message: 'Operation not implemented' } });
+			} else if (resource === 'agent' && operation === 'create') {
+				const name = this.getNodeParameter('name', i) as string;
+				const custom_prompt = this.getNodeParameter('custom_prompt', i) as string;
+				const default_llm = this.getNodeParameter('default_llm', i) as string;
+				const description = this.getNodeParameter('description', i) as string;
+				const tags = this.getNodeParameter('tags', i) as string;
+				const credentials = await this.getCredentials('StraicoApi');
+				const body: any = { name, custom_prompt, default_llm, description };
+				if (tags) body.tags = tags;
+				const response = await this.helpers.httpRequest({
+					method: 'POST',
+					url: 'https://api.straico.com/v0/agent',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body,
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'agent' && operation === 'get') {
+				const agentId = this.getNodeParameter('agent_id', i) as string;
+				const credentials = await this.getCredentials('StraicoApi');
+				const response = await this.helpers.httpRequest({
+					method: 'GET',
+					url: `https://api.straico.com/v0/agent/${agentId}`,
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'agent' && operation === 'list') {
+				const credentials = await this.getCredentials('StraicoApi');
+				const response = await this.helpers.httpRequest({
+					method: 'GET',
+					url: 'https://api.straico.com/v0/agent/',
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'agent' && operation === 'addRag') {
+				const agentId = this.getNodeParameter('agent_id', i) as string;
+				const ragId = this.getNodeParameter('ragId', i) as string;
+				const credentials = await this.getCredentials('StraicoApi');
+				const body = { rag: ragId };
+				const response = await this.helpers.httpRequest({
+					method: 'POST',
+					url: `https://stapi.straico.com/v0/agent/${agentId}/rag`,
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/json',
+					},
+					body,
+					json: true,
 				});
 				returnData.push({ json: response });
 			} else {
