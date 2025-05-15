@@ -833,7 +833,6 @@ export class Straico implements INodeType {
 						value: bufferData,
 						options: {
 							filename: binaryData.fileName,
-							contentType: binaryData.mimeType,
 						},
 					},
 				};
