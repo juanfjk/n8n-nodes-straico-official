@@ -1,6 +1,7 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
+import FormData from 'form-data';
 
 export class Straico implements INodeType {
 	description: INodeTypeDescription = {
@@ -827,27 +828,21 @@ export class Straico implements INodeType {
 
 				const binaryData = item.binary[binaryPropertyName];
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
-
 				const fileName = binaryData.fileName || 'uploaded_file.pdf';
 
-				const formData = {
-					file: {
-						value: bufferData,
-						options: {
-							filename: fileName,
-						},
-					},
-				};
+				const form = new FormData();
+				form.append('file', bufferData, fileName);
 
 				const credentials = await this.getCredentials('StraicoApi');
 
-				const response = await this.helpers.request({
+				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: 'https://api.straico.com/v0/file/upload',
-					formData,
 					headers: {
+						...form.getHeaders(),
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
+					body: form,
 				});
 
 				returnData.push({ json: response });
