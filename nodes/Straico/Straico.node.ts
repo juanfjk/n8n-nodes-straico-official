@@ -828,11 +828,13 @@ export class Straico implements INodeType {
 				const binaryData = item.binary[binaryPropertyName];
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
 
+				const fileName = binaryData.fileName || 'uploaded_file.pdf';
+
 				const formData = {
 					file: {
 						value: bufferData,
 						options: {
-							filename: binaryData.fileName,
+							filename: fileName,
 						},
 					},
 				};
