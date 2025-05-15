@@ -61,6 +61,10 @@ export class Straico implements INodeType {
 						name: 'File',
 						value: 'file',
 					},
+					{
+						name: 'RAG',
+						value: 'rag',
+					},
 				],
 				default: 'prompt',
 			},
@@ -743,6 +747,157 @@ export class Straico implements INodeType {
 					file: true,
 				},
 			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+					},
+				},
+				options: [
+					{
+						name: 'Update',
+						value: 'update',
+						action: 'Update a RAG with files',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						action: 'Delete a RAG',
+					},
+					{
+						name: 'Prompt Completion',
+						value: 'promptCompletion',
+						action: 'Send a prompt to a RAG',
+					},
+				],
+				default: 'update',
+			},
+			{
+				displayName: 'RAG ID',
+				name: 'ragId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['update', 'delete', 'promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'Files',
+				name: 'files',
+				description: 'Files to upload',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['update'],
+					},
+				},
+				typeOptions: {
+					multipleValues: true,
+					file: true,
+				},
+			},
+			{
+				displayName: 'Prompt',
+				name: 'prompt',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'Search Type',
+				name: 'search_type',
+				type: 'options',
+				options: [
+					{ name: 'similarity', value: 'similarity' },
+					{ name: 'mmr', value: 'mmr' },
+					{ name: 'similarity_score_threshold', value: 'similarity_score_threshold' },
+				],
+				default: 'similarity',
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'k',
+				name: 'k',
+				type: 'number',
+				default: 4,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'fetch_k',
+				name: 'fetch_k',
+				type: 'number',
+				default: 10,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'lambda_mult',
+				name: 'lambda_mult',
+				type: 'number',
+				default: 0.5,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'score_threshold',
+				name: 'score_threshold',
+				type: 'number',
+				default: 0.5,
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['promptCompletion'],
+					},
+				},
+			},
 		],
 	};
 
@@ -845,6 +1000,70 @@ export class Straico implements INodeType {
 					body: form,
 				});
 
+				returnData.push({ json: response });
+			} else if (resource === 'rag' && operation === 'update') {
+				const ragId = this.getNodeParameter('ragId', i) as string;
+				const filesParam = this.getNodeParameter('files', i) as string[];
+				const credentials = await this.getCredentials('StraicoApi');
+				const form = new FormData();
+				for (const fileField of filesParam) {
+					const binaryData = items[i].binary?.[fileField];
+					if (!binaryData) {
+						throw new NodeOperationError(
+							this.getNode(),
+							`No binary data property "${fileField}" found on item!`,
+						);
+					}
+					const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
+					const fileName = binaryData.fileName || 'uploaded_file.pdf';
+					form.append('files', bufferData, fileName);
+				}
+				const response = await this.helpers.httpRequest({
+					method: 'PUT',
+					url: `https://api.straico.com/v0/rag/${ragId}`,
+					headers: {
+						...form.getHeaders(),
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+					body: form,
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'rag' && operation === 'delete') {
+				const ragId = this.getNodeParameter('ragId', i) as string;
+				const credentials = await this.getCredentials('StraicoApi');
+				const response = await this.helpers.httpRequest({
+					method: 'DELETE',
+					url: `https://api.straico.com/v0/rag/${ragId}`,
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+				});
+				returnData.push({ json: response });
+			} else if (resource === 'rag' && operation === 'promptCompletion') {
+				const ragId = this.getNodeParameter('ragId', i) as string;
+				const prompt = this.getNodeParameter('prompt', i) as string;
+				const model = this.getNodeParameter('model', i) as string;
+				const search_type = this.getNodeParameter('search_type', i) as string;
+				const k = this.getNodeParameter('k', i) as number;
+				const fetch_k = this.getNodeParameter('fetch_k', i) as number;
+				const lambda_mult = this.getNodeParameter('lambda_mult', i) as number;
+				const score_threshold = this.getNodeParameter('score_threshold', i) as number;
+				const credentials = await this.getCredentials('StraicoApi');
+				const body: any = { prompt, model };
+				if (search_type) body.search_type = search_type;
+				if (k) body.k = k;
+				if (fetch_k) body.fetch_k = fetch_k;
+				if (lambda_mult) body.lambda_mult = lambda_mult;
+				if (score_threshold) body.score_threshold = score_threshold;
+				const response = await this.helpers.httpRequest({
+					method: 'POST',
+					url: `https://api.straico.com/v0/rag/${ragId}/prompt`,
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body,
+				});
 				returnData.push({ json: response });
 			} else {
 				// fallback to default routing
