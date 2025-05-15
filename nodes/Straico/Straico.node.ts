@@ -1,6 +1,6 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
-import { IExecuteFunctions, NodeOperationError, IBinaryData } from 'n8n-workflow';
+import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
 
 export class Straico implements INodeType {
 	description: INodeTypeDescription = {
@@ -825,16 +825,23 @@ export class Straico implements INodeType {
 					);
 				}
 
-				const prepared = await this.helpers.prepareBinaryData(item.binary[binaryPropertyName]);
+				const binaryData = item.binary[binaryPropertyName].data;
+				const prepared = await this.helpers.prepareBinaryData(Buffer.from(binaryData, 'base64'));
 				let bufferData: Buffer;
 				if (Buffer.isBuffer(prepared.data)) {
-					bufferData = prepared.data as Buffer;
+					bufferData = prepared.data;
 				} else if (typeof prepared.data === 'string') {
 					bufferData = Buffer.from(prepared.data, 'base64');
+				} else if (
+					typeof prepared.data === 'object' &&
+					prepared.data !== null &&
+					Buffer.isBuffer((prepared.data as any).data)
+				) {
+					bufferData = (prepared.data as any).data;
 				} else {
 					throw new NodeOperationError(
 						this.getNode(),
-						'Binary data is not a Buffer or base64 string.',
+						'Binary data is not a Buffer, base64 string, or object with Buffer .data property.',
 					);
 				}
 				const fileOptions: { filename?: string; contentType?: string } = {};
