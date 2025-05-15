@@ -861,6 +861,24 @@ export class Straico implements INodeType {
 				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
 				default: '',
 			},
+			{
+				displayName: 'Description',
+				name: 'description',
+				type: 'string',
+				required: true,
+				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
+				default: '',
+			},
+			{
+				displayName: 'Files',
+				name: 'files',
+				description: 'Files to upload',
+				type: 'string',
+				required: true,
+				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
+				typeOptions: { multipleValues: true, file: true },
+				default: '',
+			},
 		],
 	};
 
