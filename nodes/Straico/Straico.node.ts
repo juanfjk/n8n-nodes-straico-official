@@ -847,8 +847,6 @@ export class Straico implements INodeType {
 					headers: {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
-					// No forzar Content-Type, dejar que la librería lo gestione
-					json: true,
 				});
 
 				returnData.push({ json: response });
