@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-straico-official",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "Official Straico node for n8n",
 	"keywords": [
 		"n8n-community-node-package",
