@@ -1,5 +1,6 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
+import { IExecuteFunctions, NodeOperationError, IBinaryData } from 'n8n-workflow';
 
 export class Straico implements INodeType {
 	description: INodeTypeDescription = {
@@ -804,4 +805,71 @@ export class Straico implements INodeType {
 			},
 		},
 	};
+
+	async execute(this: IExecuteFunctions) {
+		const items = this.getInputData();
+		const returnData = [];
+
+		for (let i = 0; i < items.length; i++) {
+			const resource = this.getNodeParameter('resource', i) as string;
+			const operation = this.getNodeParameter('operation', i) as string;
+
+			if (resource === 'file' && operation === 'upload') {
+				const binaryPropertyName = this.getNodeParameter('file', i) as string;
+				const item = items[i];
+
+				if (!item.binary || !item.binary[binaryPropertyName]) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`No binary data property "${binaryPropertyName}" found on item!`,
+					);
+				}
+
+				const prepared = await this.helpers.prepareBinaryData(item.binary[binaryPropertyName]);
+				let bufferData: Buffer;
+				if (Buffer.isBuffer(prepared.data)) {
+					bufferData = prepared.data as Buffer;
+				} else if (typeof prepared.data === 'string') {
+					bufferData = Buffer.from(prepared.data, 'base64');
+				} else {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Binary data is not a Buffer or base64 string.',
+					);
+				}
+				const fileOptions: { filename?: string; contentType?: string } = {};
+				if (prepared.options && typeof prepared.options === 'object') {
+					if ('filename' in prepared.options)
+						fileOptions.filename = (prepared.options as any).filename;
+					if ('contentType' in prepared.options)
+						fileOptions.contentType = (prepared.options as any).contentType;
+				}
+				const formData = {
+					file: {
+						value: bufferData,
+						options: fileOptions,
+					},
+				};
+
+				const credentials = await this.getCredentials('StraicoApi');
+
+				const response = await this.helpers.request({
+					method: 'POST',
+					url: 'https://api.straico.com/v0/file/upload',
+					formData,
+					headers: {
+						Authorization: `Bearer ${credentials.apiKey}`,
+					},
+					json: true,
+				});
+
+				returnData.push({ json: response });
+			} else {
+				// fallback to default routing
+				returnData.push(items[i]);
+			}
+		}
+
+		return this.prepareOutputData(returnData);
+	}
 }
