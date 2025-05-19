@@ -861,6 +861,113 @@ export class Straico implements INodeType {
 				displayOptions: { show: { resource: ['rag'], operation: ['create'] } },
 				default: '',
 			},
+			{
+				displayName: 'Chunking Options',
+				name: 'chunkingOptions',
+				type: 'collection',
+				placeholder: 'Add Chunking Option',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['rag'],
+						operation: ['create'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Chunking Method',
+						name: 'chunking_method',
+						type: 'options',
+						options: [
+							{ name: 'Fixed Size', value: 'fixed_size' },
+							{ name: 'Recursive', value: 'recursive' },
+							{ name: 'Markdown', value: 'markdown' },
+							{ name: 'Python', value: 'python' },
+							{ name: 'Semantic', value: 'semantic' },
+						],
+						default: 'fixed_size',
+						description: 'Chunking method to use for generating the RAG base',
+					},
+					{
+						displayName: 'Chunk Size',
+						name: 'chunk_size',
+						type: 'number',
+						default: 1000,
+						description: 'Size of each chunk',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Chunk Overlap',
+						name: 'chunk_overlap',
+						type: 'number',
+						default: 50,
+						description: 'Number of overlapping tokens between chunks',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Separator',
+						name: 'separator',
+						type: 'string',
+						default: '\n',
+						description: 'Separator for fixed_size chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size'],
+							},
+						},
+					},
+					{
+						displayName: 'Separators',
+						name: 'separators',
+						type: 'string',
+						default: '\n\n,\n, ,',
+						description: 'Comma-separated list of separators for recursive chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['recursive'],
+							},
+						},
+					},
+					{
+						displayName: 'Breakpoint Threshold Type',
+						name: 'breakpoint_threshold_type',
+						type: 'options',
+						options: [
+							{ name: 'Percentile', value: 'percentile' },
+							{ name: 'Interquartile', value: 'interquartile' },
+							{ name: 'Standard Deviation', value: 'standard_deviation' },
+							{ name: 'Gradient', value: 'gradient' },
+						],
+						default: 'percentile',
+						description: 'Breakpoint threshold type for semantic chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Buffer Size',
+						name: 'buffer_size',
+						type: 'number',
+						default: 100,
+						description: 'Buffer size for semantic chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['semantic'],
+							},
+						},
+					},
+				],
+			},
 		],
 	};
 
@@ -968,10 +1075,52 @@ export class Straico implements INodeType {
 				const name = this.getNodeParameter('ragName', i) as string;
 				const description = this.getNodeParameter('ragDescription', i) as string;
 				const fileField = this.getNodeParameter('files', i) as string;
+				const chunkingOptions = (this.getNodeParameter('chunkingOptions', i, {}) || {}) as Record<
+					string,
+					any
+				>;
 				const credentials = await this.getCredentials('StraicoApi');
 				const form = new FormData();
 				form.append('name', name);
 				form.append('description', description);
+				// Add chunking options if provided
+				if (chunkingOptions.chunking_method) {
+					form.append('chunking_method', chunkingOptions.chunking_method);
+					if (chunkingOptions.chunk_size !== undefined) {
+						form.append('chunk_size', chunkingOptions.chunk_size.toString());
+					}
+					if (chunkingOptions.chunk_overlap !== undefined) {
+						form.append('chunk_overlap', chunkingOptions.chunk_overlap.toString());
+					}
+					if (
+						chunkingOptions.separator !== undefined &&
+						chunkingOptions.chunking_method === 'fixed_size'
+					) {
+						form.append('separator', chunkingOptions.separator);
+					}
+					if (
+						chunkingOptions.separators !== undefined &&
+						chunkingOptions.chunking_method === 'recursive'
+					) {
+						// Convert comma-separated string to JSON array string
+						const separatorsArr = chunkingOptions.separators
+							.split(',')
+							.map((s: string) => s.trim());
+						form.append('separators', JSON.stringify(separatorsArr));
+					}
+					if (
+						chunkingOptions.breakpoint_threshold_type !== undefined &&
+						chunkingOptions.chunking_method === 'semantic'
+					) {
+						form.append('breakpoint_threshold_type', chunkingOptions.breakpoint_threshold_type);
+					}
+					if (
+						chunkingOptions.buffer_size !== undefined &&
+						chunkingOptions.chunking_method === 'semantic'
+					) {
+						form.append('buffer_size', chunkingOptions.buffer_size.toString());
+					}
+				}
 				const binaryData = items[i].binary?.[fileField];
 				if (!binaryData) {
 					throw new NodeOperationError(
