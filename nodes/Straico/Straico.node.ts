@@ -242,28 +242,17 @@ export class Straico implements INodeType {
 						name: 'file_urls',
 						type: 'string',
 						default: '',
-						description: 'Comma-separated list of file URLs to analyze',
-						routing: {
-							request: {
-								body: {
-									file_urls: '={{ $value.split(",").map(url => url.trim()) }}',
-								},
-							},
-						},
+						description:
+							'Comma-separated list of file URLs to analyze (up to 4, previously uploaded via the File Upload endpoint)',
+						required: false,
 					},
 					{
 						displayName: 'YouTube URLs',
 						name: 'youtube_urls',
 						type: 'string',
 						default: '',
-						description: 'Comma-separated list of YouTube URLs to analyze',
-						routing: {
-							request: {
-								body: {
-									youtube_urls: '={{ $value.split(",").map(url => url.trim()) }}',
-								},
-							},
-						},
+						description: 'Comma-separated list of YouTube video URLs to analyze (up to 4)',
+						required: false,
 					},
 					{
 						displayName: 'Images',
@@ -271,30 +260,18 @@ export class Straico implements INodeType {
 						type: 'string',
 						default: '',
 						description: 'Comma-separated list of image URLs',
-						routing: {
-							request: {
-								body: {
-									images: '={{ $value.split(",").map(url => url.trim()) }}',
-								},
-							},
-						},
+						required: false,
 					},
 					{
 						displayName: 'Temperature',
 						name: 'temperature',
 						type: 'number',
 						default: 0.7,
-						description: 'Controls creativity and diversity of generated text',
+						description: 'Controls creativity and diversity of generated text (0-2)',
+						required: false,
 						typeOptions: {
 							minValue: 0,
 							maxValue: 2,
-						},
-						routing: {
-							request: {
-								body: {
-									temperature: '={{ $value }}',
-								},
-							},
 						},
 					},
 					{
@@ -303,16 +280,10 @@ export class Straico implements INodeType {
 						type: 'number',
 						default: 100,
 						description: 'Maximum tokens to generate',
+						required: false,
 						typeOptions: {
 							minValue: 1,
 							maxValue: 2048,
-						},
-						routing: {
-							request: {
-								body: {
-									max_tokens: '={{ $value }}',
-								},
-							},
 						},
 					},
 					{
@@ -321,13 +292,7 @@ export class Straico implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: 'Replace failed models with similar ones if available',
-						routing: {
-							request: {
-								body: {
-									replace_failed_models: '={{ $value }}',
-								},
-							},
-						},
+						required: false,
 					},
 					{
 						displayName: 'Display Transcripts',
@@ -335,13 +300,7 @@ export class Straico implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: 'If true, returns transcripts of the files',
-						routing: {
-							request: {
-								body: {
-									display_transcripts: '={{ $value }}',
-								},
-							},
-						},
+						required: false,
 					},
 				],
 			},
@@ -1214,6 +1173,10 @@ export class Straico implements INodeType {
 				if (fetch_k) body.fetch_k = fetch_k;
 				if (lambda_mult) body.lambda_mult = lambda_mult;
 				if (score_threshold) body.score_threshold = score_threshold;
+
+				// Log de depuración para ver el body antes de la petición
+				console.log('Prompt Completion Body:', JSON.stringify(body, null, 2));
+
 				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: `https://api.straico.com/v0/rag/${ragId}/prompt`,
@@ -1325,7 +1288,10 @@ export class Straico implements INodeType {
 				const models = this.getNodeParameter('models', i, []);
 				const smartLlmSelector = this.getNodeParameter('smart_llm_selector', i, undefined);
 				const message = this.getNodeParameter('message', i);
-				const additionalFields = this.getNodeParameter('additionalFields', i, {});
+				const additionalFields = this.getNodeParameter('additionalFields', i, {}) as Record<
+					string,
+					any
+				>;
 				const credentials = await this.getCredentials('StraicoApi');
 
 				// Validación exclusiva
@@ -1350,16 +1316,63 @@ export class Straico implements INodeType {
 					);
 				}
 
-				const body: any = {
-					message,
-					...additionalFields,
-				};
+				const body: Record<string, any> = { message };
 				if (hasModels) {
 					body.models = models;
 				}
 				if (hasSmartSelector) {
 					body.smart_llm_selector = smartLlmSelector;
 				}
+
+				// Procesar file_urls, youtube_urls, images correctamente
+				const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+				let imagesArr: string[] = [];
+				if (
+					typeof additionalFields.file_urls === 'string' &&
+					additionalFields.file_urls.trim() !== ''
+				) {
+					const arr = additionalFields.file_urls
+						.split(',')
+						.map((url: string) => url.trim())
+						.filter((url: string) => url);
+					// Separar imágenes de archivos
+					const fileUrlsArr = arr.filter((url: string) => {
+						const isImage = imageExtensions.some((ext) => url.toLowerCase().includes(ext));
+						if (isImage) imagesArr.push(url);
+						return !isImage;
+					});
+					if (fileUrlsArr.length > 0) body.file_urls = fileUrlsArr;
+				}
+				if (
+					typeof additionalFields.youtube_urls === 'string' &&
+					additionalFields.youtube_urls.trim() !== ''
+				) {
+					const arr = additionalFields.youtube_urls
+						.split(',')
+						.map((url: string) => url.trim())
+						.filter((url: string) => url);
+					if (arr.length > 0) body.youtube_urls = arr;
+				}
+				if (typeof additionalFields.images === 'string' && additionalFields.images.trim() !== '') {
+					const arr = additionalFields.images
+						.split(',')
+						.map((url: string) => url.trim())
+						.filter((url: string) => url);
+					imagesArr = imagesArr.concat(arr);
+				}
+				if (imagesArr.length > 0) body.images = imagesArr;
+
+				// Agregar el resto de los campos adicionales (booleanos, números, etc.)
+				['temperature', 'max_tokens', 'replace_failed_models', 'display_transcripts'].forEach(
+					(field) => {
+						if (additionalFields[field] !== undefined) {
+							body[field] = additionalFields[field];
+						}
+					},
+				);
+
+				// Log de depuración para ver el body antes de la petición
+				console.log('Prompt Completion Body:', JSON.stringify(body, null, 2));
 
 				const response = await this.helpers.httpRequest({
 					method: 'POST',
