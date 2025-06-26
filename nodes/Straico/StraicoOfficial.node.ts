@@ -1,15 +1,14 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
-import FormData from 'form-data';
 
-export class Straico implements INodeType {
+export class StraicoOfficial implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Straico Official',
-		name: 'Straico Official',
+		name: 'straicoOfficial',
 		icon: 'file:straico.svg',
 		group: ['transform'],
-		version: 1,
+		version: [1, 2],
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Get data from Straico API',
 		defaults: {
@@ -38,22 +37,6 @@ export class Straico implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'User',
-						value: 'user',
-					},
-					{
-						name: 'Models',
-						value: 'models',
-					},
-					{
-						name: 'Prompt',
-						value: 'prompt',
-					},
-					{
-						name: 'Image',
-						value: 'image',
-					},
-					{
 						name: 'Agent',
 						value: 'agent',
 					},
@@ -62,8 +45,24 @@ export class Straico implements INodeType {
 						value: 'file',
 					},
 					{
+						name: 'Image',
+						value: 'image',
+					},
+					{
+						name: 'Model',
+						value: 'models',
+					},
+					{
+						name: 'Prompt',
+						value: 'prompt',
+					},
+					{
 						name: 'RAG',
 						value: 'rag',
+					},
+					{
+						name: 'User',
+						value: 'user',
 					},
 				],
 				default: 'prompt',
@@ -105,9 +104,9 @@ export class Straico implements INodeType {
 				},
 				options: [
 					{
-						name: 'Get All',
+						name: 'Get Many',
 						value: 'getAll',
-						action: 'Get all models information',
+						action: 'Get many models information',
 						routing: {
 							request: {
 								method: 'GET',
@@ -144,14 +143,15 @@ export class Straico implements INodeType {
 				default: 'completion',
 			},
 			{
-				displayName: 'Models',
+				displayName: 'Model Names or IDs',
 				name: 'models',
 				type: 'multiOptions',
+				description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+				hint: 'Select one or more models for completion. Leave empty to use smart LLM selector.',
 				typeOptions: {
 					loadOptionsMethod: 'getModels',
 				},
 				default: [],
-				required: false,
 				displayOptions: {
 					show: {
 						resource: ['prompt'],
@@ -170,6 +170,9 @@ export class Straico implements INodeType {
 				displayName: 'Message',
 				name: 'message',
 				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
 				default: '',
 				required: true,
 				displayOptions: {
@@ -196,6 +199,7 @@ export class Straico implements INodeType {
 					show: {
 						resource: ['prompt'],
 						operation: ['completion'],
+						'@version': [1, 2],
 					},
 				},
 				options: [
@@ -238,41 +242,28 @@ export class Straico implements INodeType {
 				},
 				options: [
 					{
+						displayName: 'Display Transcripts',
+						name: 'display_transcripts',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to return transcripts of the files',
+					},
+					{
 						displayName: 'File URLs',
 						name: 'file_urls',
 						type: 'string',
 						default: '',
+						hint: 'e.g. https://example.com/file1.pdf,https://example.com/file2.docx',
 						description:
 							'Comma-separated list of file URLs to analyze (up to 4, previously uploaded via the File Upload endpoint)',
-						required: false,
-					},
-					{
-						displayName: 'YouTube URLs',
-						name: 'youtube_urls',
-						type: 'string',
-						default: '',
-						description: 'Comma-separated list of YouTube video URLs to analyze (up to 4)',
-						required: false,
 					},
 					{
 						displayName: 'Images',
 						name: 'images',
 						type: 'string',
 						default: '',
+						hint: 'e.g. https://example.com/image1.jpg,https://example.com/image2.png',
 						description: 'Comma-separated list of image URLs',
-						required: false,
-					},
-					{
-						displayName: 'Temperature',
-						name: 'temperature',
-						type: 'number',
-						default: 0.7,
-						description: 'Controls creativity and diversity of generated text (0-2)',
-						required: false,
-						typeOptions: {
-							minValue: 0,
-							maxValue: 2,
-						},
 					},
 					{
 						displayName: 'Max Tokens',
@@ -280,7 +271,6 @@ export class Straico implements INodeType {
 						type: 'number',
 						default: 100,
 						description: 'Maximum tokens to generate',
-						required: false,
 						typeOptions: {
 							minValue: 1,
 							maxValue: 2048,
@@ -291,18 +281,41 @@ export class Straico implements INodeType {
 						name: 'replace_failed_models',
 						type: 'boolean',
 						default: false,
-						description: 'Replace failed models with similar ones if available',
-						required: false,
+						description: 'Whether to replace failed models with similar ones if available',
 					},
 					{
-						displayName: 'Display Transcripts',
-						name: 'display_transcripts',
-						type: 'boolean',
-						default: false,
-						description: 'If true, returns transcripts of the files',
-						required: false,
+						displayName: 'Temperature',
+						name: 'temperature',
+						type: 'number',
+						default: 0.7,
+						description: 'Controls creativity and diversity of generated text (0-2)',
+						typeOptions: {
+							minValue: 0,
+							maxValue: 2,
+						},
+					},
+					{
+						displayName: 'YouTube URLs',
+						name: 'youtube_urls',
+						type: 'string',
+						default: '',
+						hint: 'e.g. https://youtube.com/watch?v=abc123,https://youtube.com/watch?v=def456',
+						description: 'Comma-separated list of YouTube video URLs to analyze (up to 4)',
 					},
 				],
+			},
+			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to return a simplified version of the response instead of the raw data',
+				displayOptions: {
+					show: {
+						resource: ['prompt'],
+						operation: ['completion'],
+					},
+				},
 			},
 			{
 				displayName: 'Operation',
@@ -353,6 +366,9 @@ export class Straico implements INodeType {
 				displayName: 'Description',
 				name: 'description',
 				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
 				default: '',
 				required: true,
 				displayOptions: {
@@ -449,7 +465,7 @@ export class Straico implements INodeType {
 				name: 'enhance',
 				type: 'boolean',
 				default: false,
-				description: 'Use AI to enhance the original prompt',
+				description: 'Whether to use AI to enhance the original prompt',
 				displayOptions: {
 					show: {
 						resource: ['image'],
@@ -482,17 +498,17 @@ export class Straico implements INodeType {
 					},
 				},
 				options: [
+					{ name: 'Add RAG', value: 'addRag', action: 'Add RAG to agent' },
 					{ name: 'Create', value: 'create', action: 'Create a new agent' },
+					{ name: 'Delete', value: 'delete', action: 'Delete agent' },
 					{ name: 'Get Details', value: 'get', action: 'Get agent details' },
 					{ name: 'List', value: 'list', action: 'List all agents' },
-					{ name: 'Add RAG', value: 'addRag', action: 'Add RAG to agent' },
-					{ name: 'Update', value: 'update', action: 'Update agent details' },
-					{ name: 'Delete', value: 'delete', action: 'Delete agent' },
 					{
 						name: 'Prompt Completion',
 						value: 'promptCompletion',
 						action: 'Send a prompt to agent',
 					},
+					{ name: 'Update', value: 'update', action: 'Update agent details' },
 				],
 				default: 'list',
 			},
@@ -501,6 +517,7 @@ export class Straico implements INodeType {
 				name: 'agent_id',
 				type: 'string',
 				required: true,
+				hint: 'e.g. agent_123456789',
 				displayOptions: {
 					show: {
 						resource: ['agent'],
@@ -521,6 +538,9 @@ export class Straico implements INodeType {
 				displayName: 'Custom Prompt',
 				name: 'custom_prompt',
 				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
 				required: true,
 				displayOptions: { show: { resource: ['agent'], operation: ['create', 'update'] } },
 				default: '',
@@ -546,7 +566,7 @@ export class Straico implements INodeType {
 				name: 'tags',
 				type: 'string',
 				description: 'JSON array of tags, e.g. ["assistant","rag"]',
-				required: false,
+				hint: 'e.g. ["assistant","rag","customer-support"]',
 				displayOptions: { show: { resource: ['agent'], operation: ['create', 'update'] } },
 				default: '[]',
 			},
@@ -589,36 +609,36 @@ export class Straico implements INodeType {
 				name: 'search_type',
 				type: 'options',
 				options: [
-					{ name: 'similarity', value: 'similarity' },
-					{ name: 'mmr', value: 'mmr' },
-					{ name: 'similarity_score_threshold', value: 'similarity_score_threshold' },
+					{ name: 'Similarity', value: 'similarity' },
+					{ name: 'Mmr', value: 'mmr' },
+					{ name: 'Similarity_score_threshold', value: 'similarity_score_threshold' },
 				],
 				default: 'similarity',
 				displayOptions: { show: { resource: ['agent'], operation: ['promptCompletion'] } },
 			},
 			{
-				displayName: 'k',
+				displayName: 'K',
 				name: 'k',
 				type: 'number',
 				default: 4,
 				displayOptions: { show: { resource: ['agent'], operation: ['promptCompletion'] } },
 			},
 			{
-				displayName: 'fetch_k',
+				displayName: 'Fetch_k',
 				name: 'fetch_k',
 				type: 'number',
 				default: 10,
 				displayOptions: { show: { resource: ['agent'], operation: ['promptCompletion'] } },
 			},
 			{
-				displayName: 'lambda_mult',
+				displayName: 'Lambda_mult',
 				name: 'lambda_mult',
 				type: 'number',
 				default: 0.5,
 				displayOptions: { show: { resource: ['agent'], operation: ['promptCompletion'] } },
 			},
 			{
-				displayName: 'score_threshold',
+				displayName: 'Score_threshold',
 				name: 'score_threshold',
 				type: 'number',
 				default: 0.5,
@@ -683,15 +703,11 @@ export class Straico implements INodeType {
 				},
 				options: [
 					{ name: 'Create', value: 'create', action: 'Create a new RAG' },
-					{ name: 'List', value: 'list', action: 'List all RAGs' },
-					{ name: 'Get', value: 'get', action: 'Get RAG by ID' },
-					{ name: 'Update', value: 'update', action: 'Update a RAG with files' },
 					{ name: 'Delete', value: 'delete', action: 'Delete a RAG' },
-					{
-						name: 'Prompt Completion',
-						value: 'promptCompletion',
-						action: 'Send a prompt to a RAG',
-					},
+					{ name: 'Get', value: 'get', action: 'Get RAG by ID' },
+					{ name: 'List', value: 'list', action: 'List all ra gs' },
+					{ name: 'Prompt Completion', value: 'promptCompletion', action: 'Send a prompt to a RAG' },
+					{ name: 'Update', value: 'update', action: 'Update a RAG with files' },
 				],
 				default: 'list',
 			},
@@ -744,9 +760,9 @@ export class Straico implements INodeType {
 				name: 'search_type',
 				type: 'options',
 				options: [
-					{ name: 'similarity', value: 'similarity' },
-					{ name: 'mmr', value: 'mmr' },
-					{ name: 'similarity_score_threshold', value: 'similarity_score_threshold' },
+					{ name: 'Similarity', value: 'similarity' },
+					{ name: 'Mmr', value: 'mmr' },
+					{ name: 'Similarity_score_threshold', value: 'similarity_score_threshold' },
 				],
 				default: 'similarity',
 				displayOptions: {
@@ -757,7 +773,7 @@ export class Straico implements INodeType {
 				},
 			},
 			{
-				displayName: 'k',
+				displayName: 'K',
 				name: 'k',
 				type: 'number',
 				default: 4,
@@ -769,7 +785,7 @@ export class Straico implements INodeType {
 				},
 			},
 			{
-				displayName: 'fetch_k',
+				displayName: 'Fetch_k',
 				name: 'fetch_k',
 				type: 'number',
 				default: 10,
@@ -781,7 +797,7 @@ export class Straico implements INodeType {
 				},
 			},
 			{
-				displayName: 'lambda_mult',
+				displayName: 'Lambda_mult',
 				name: 'lambda_mult',
 				type: 'number',
 				default: 0.5,
@@ -793,7 +809,7 @@ export class Straico implements INodeType {
 				},
 			},
 			{
-				displayName: 'score_threshold',
+				displayName: 'Score_threshold',
 				name: 'score_threshold',
 				type: 'number',
 				default: 0.5,
@@ -834,68 +850,6 @@ export class Straico implements INodeType {
 				},
 				options: [
 					{
-						displayName: 'Chunking Method',
-						name: 'chunking_method',
-						type: 'options',
-						options: [
-							{ name: 'Fixed Size', value: 'fixed_size' },
-							{ name: 'Recursive', value: 'recursive' },
-							{ name: 'Markdown', value: 'markdown' },
-							{ name: 'Python', value: 'python' },
-							{ name: 'Semantic', value: 'semantic' },
-						],
-						default: 'fixed_size',
-						description: 'Chunking method to use for generating the RAG base',
-					},
-					{
-						displayName: 'Chunk Size',
-						name: 'chunk_size',
-						type: 'number',
-						default: 1000,
-						description: 'Size of each chunk',
-						displayOptions: {
-							show: {
-								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
-							},
-						},
-					},
-					{
-						displayName: 'Chunk Overlap',
-						name: 'chunk_overlap',
-						type: 'number',
-						default: 50,
-						description: 'Number of overlapping tokens between chunks',
-						displayOptions: {
-							show: {
-								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
-							},
-						},
-					},
-					{
-						displayName: 'Separator',
-						name: 'separator',
-						type: 'string',
-						default: '\n',
-						description: 'Separator for fixed_size chunking',
-						displayOptions: {
-							show: {
-								chunking_method: ['fixed_size'],
-							},
-						},
-					},
-					{
-						displayName: 'Separators',
-						name: 'separators',
-						type: 'string',
-						default: '\n\n,\n, ,',
-						description: 'Comma-separated list of separators for recursive chunking',
-						displayOptions: {
-							show: {
-								chunking_method: ['recursive'],
-							},
-						},
-					},
-					{
 						displayName: 'Breakpoint Threshold Type',
 						name: 'breakpoint_threshold_type',
 						type: 'options',
@@ -922,6 +876,68 @@ export class Straico implements INodeType {
 						displayOptions: {
 							show: {
 								chunking_method: ['semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Chunk Overlap',
+						name: 'chunk_overlap',
+						type: 'number',
+						default: 50,
+						description: 'Number of overlapping tokens between chunks',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Chunk Size',
+						name: 'chunk_size',
+						type: 'number',
+						default: 1000,
+						description: 'Size of each chunk',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size', 'recursive', 'markdown', 'python', 'semantic'],
+							},
+						},
+					},
+					{
+						displayName: 'Chunking Method',
+						name: 'chunking_method',
+						type: 'options',
+						options: [
+							{ name: 'Fixed Size', value: 'fixed_size' },
+							{ name: 'Markdown', value: 'markdown' },
+							{ name: 'Python', value: 'python' },
+							{ name: 'Recursive', value: 'recursive' },
+							{ name: 'Semantic', value: 'semantic' },
+						],
+						default: 'fixed_size',
+						description: 'Chunking method to use for generating the RAG base',
+					},
+					{
+						displayName: 'Separator',
+						name: 'separator',
+						type: 'string',
+						default: '\n',
+						description: 'Separator for fixed_size chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['fixed_size'],
+							},
+						},
+					},
+					{
+						displayName: 'Separators',
+						name: 'separators',
+						type: 'string',
+						default: '\n\n,\n, ,',
+						description: 'Comma-separated list of separators for recursive chunking',
+						displayOptions: {
+							show: {
+								chunking_method: ['recursive'],
 							},
 						},
 					},
@@ -959,10 +975,10 @@ export class Straico implements INodeType {
 					const credentials = await this.getCredentials('StraicoApi');
 
 					if (!credentials?.apiKey) {
-						throw new Error('No API key provided in credentials');
+						throw new NodeOperationError(this.getNode(), 'No API key provided in credentials');
 					}
 
-					const response = await this.helpers.request({
+					const response = await this.helpers.httpRequest({
 						method: 'GET',
 						url: 'https://api.straico.com/v1/models',
 						headers: {
@@ -974,7 +990,7 @@ export class Straico implements INodeType {
 					});
 
 					if (!response?.success || !response?.data?.chat) {
-						throw new Error('Invalid response format from the API');
+						throw new NodeOperationError(this.getNode(), 'Invalid response format from the API');
 					}
 
 					// Map the chat models from the response
@@ -985,7 +1001,7 @@ export class Straico implements INodeType {
 					}));
 				} catch (error) {
 					console.error('Error loading models:', error);
-					throw new Error(`Failed to load models: ${error.message}`);
+					throw new NodeOperationError(this.getNode(), `Failed to load models: ${error.message}`);
 				}
 			},
 		},
@@ -1014,22 +1030,31 @@ export class Straico implements INodeType {
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
 				const fileName = binaryData.fileName || 'uploaded_file.pdf';
 
-				const form = new FormData();
-				form.append('file', bufferData, fileName);
-
 				const credentials = await this.getCredentials('StraicoApi');
 
 				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: 'https://api.straico.com/v0/file/upload',
 					headers: {
-						...form.getHeaders(),
 						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'multipart/form-data',
 					},
-					body: form,
+					body: {
+						file: {
+							value: bufferData,
+							options: {
+								filename: fileName,
+							},
+						},
+					},
 				});
 
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'create') {
 				const name = this.getNodeParameter('ragName', i) as string;
 				const description = this.getNodeParameter('ragDescription', i) as string;
@@ -1039,23 +1064,27 @@ export class Straico implements INodeType {
 					any
 				>;
 				const credentials = await this.getCredentials('StraicoApi');
-				const form = new FormData();
-				form.append('name', name);
-				form.append('description', description);
+				
+				// Prepare form data for RAG creation
+				const formData: Record<string, any> = {
+					name,
+					description,
+				};
+				
 				// Add chunking options if provided
 				if (chunkingOptions.chunking_method) {
-					form.append('chunking_method', chunkingOptions.chunking_method);
+					formData.chunking_method = chunkingOptions.chunking_method;
 					if (chunkingOptions.chunk_size !== undefined) {
-						form.append('chunk_size', chunkingOptions.chunk_size.toString());
+						formData.chunk_size = chunkingOptions.chunk_size.toString();
 					}
 					if (chunkingOptions.chunk_overlap !== undefined) {
-						form.append('chunk_overlap', chunkingOptions.chunk_overlap.toString());
+						formData.chunk_overlap = chunkingOptions.chunk_overlap.toString();
 					}
 					if (
 						chunkingOptions.separator !== undefined &&
 						chunkingOptions.chunking_method === 'fixed_size'
 					) {
-						form.append('separator', chunkingOptions.separator);
+						formData.separator = chunkingOptions.separator;
 					}
 					if (
 						chunkingOptions.separators !== undefined &&
@@ -1065,21 +1094,22 @@ export class Straico implements INodeType {
 						const separatorsArr = chunkingOptions.separators
 							.split(',')
 							.map((s: string) => s.trim());
-						form.append('separators', JSON.stringify(separatorsArr));
+						formData.separators = JSON.stringify(separatorsArr);
 					}
 					if (
 						chunkingOptions.breakpoint_threshold_type !== undefined &&
 						chunkingOptions.chunking_method === 'semantic'
 					) {
-						form.append('breakpoint_threshold_type', chunkingOptions.breakpoint_threshold_type);
+						formData.breakpoint_threshold_type = chunkingOptions.breakpoint_threshold_type;
 					}
 					if (
 						chunkingOptions.buffer_size !== undefined &&
 						chunkingOptions.chunking_method === 'semantic'
 					) {
-						form.append('buffer_size', chunkingOptions.buffer_size.toString());
+						formData.buffer_size = chunkingOptions.buffer_size.toString();
 					}
 				}
+				
 				const binaryData = items[i].binary?.[fileField];
 				if (!binaryData) {
 					throw new NodeOperationError(
@@ -1089,17 +1119,29 @@ export class Straico implements INodeType {
 				}
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
 				const fileName = binaryData.fileName || 'uploaded_file.pdf';
-				form.append('files', bufferData, fileName);
+				
+				formData.files = {
+					value: bufferData,
+					options: {
+						filename: fileName,
+					},
+				};
+				
 				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: 'https://api.straico.com/v0/rag',
 					headers: {
-						...form.getHeaders(),
 						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'multipart/form-data',
 					},
-					body: form,
+					body: formData,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'list') {
 				const credentials = await this.getCredentials('StraicoApi');
 				const response = await this.helpers.httpRequest({
@@ -1109,7 +1151,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'get') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
@@ -1120,12 +1167,17 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'update') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
 				const fileField = this.getNodeParameter('files', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
-				const form = new FormData();
+				
 				const binaryData = items[i].binary?.[fileField];
 				if (!binaryData) {
 					throw new NodeOperationError(
@@ -1135,17 +1187,31 @@ export class Straico implements INodeType {
 				}
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, fileField);
 				const fileName = binaryData.fileName || 'uploaded_file.pdf';
-				form.append('files', bufferData, fileName);
+				
+				const formData = {
+					files: {
+						value: bufferData,
+						options: {
+							filename: fileName,
+						},
+					},
+				};
+				
 				const response = await this.helpers.httpRequest({
 					method: 'PUT',
 					url: `https://api.straico.com/v0/rag/${ragId}`,
 					headers: {
-						...form.getHeaders(),
 						Authorization: `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'multipart/form-data',
 					},
-					body: form,
+					body: formData,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'delete') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
@@ -1156,7 +1222,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'rag' && operation === 'promptCompletion') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
 				const prompt = this.getNodeParameter('prompt', i) as string;
@@ -1166,6 +1237,7 @@ export class Straico implements INodeType {
 				const fetch_k = this.getNodeParameter('fetch_k', i) as number;
 				const lambda_mult = this.getNodeParameter('lambda_mult', i) as number;
 				const score_threshold = this.getNodeParameter('score_threshold', i) as number;
+				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
 				const credentials = await this.getCredentials('StraicoApi');
 				const body: any = { prompt, model };
 				if (search_type) body.search_type = search_type;
@@ -1186,7 +1258,26 @@ export class Straico implements INodeType {
 					},
 					body,
 				});
-				returnData.push({ json: response });
+
+				// Apply simplify if requested
+				let outputData = response;
+				if (simplify && response && typeof response === 'object') {
+					// Simplified version with most important fields
+					outputData = {
+						id: response.id,
+						message: response.message,
+						model: response.model,
+						usage: response.usage,
+						created_at: response.created_at,
+					};
+				}
+
+				returnData.push({ 
+					json: outputData,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'update') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const name = this.getNodeParameter('name', i) as string;
@@ -1206,7 +1297,12 @@ export class Straico implements INodeType {
 					},
 					body,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'delete') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
@@ -1217,7 +1313,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'promptCompletion') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const prompt = this.getNodeParameter('prompt', i) as string;
@@ -1226,6 +1327,7 @@ export class Straico implements INodeType {
 				const fetch_k = this.getNodeParameter('fetch_k', i) as number;
 				const lambda_mult = this.getNodeParameter('lambda_mult', i) as number;
 				const score_threshold = this.getNodeParameter('score_threshold', i) as number;
+				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
 				const credentials = await this.getCredentials('StraicoApi');
 				const body: any = { prompt };
 				if (search_type) body.search_type = search_type;
@@ -1242,7 +1344,26 @@ export class Straico implements INodeType {
 					},
 					body,
 				});
-				returnData.push({ json: response });
+
+				// Apply simplify if requested
+				let outputData = response;
+				if (simplify && response && typeof response === 'object') {
+					// Simplified version with most important fields
+					outputData = {
+						id: response.id,
+						message: response.message,
+						model: response.model,
+						usage: response.usage,
+						created_at: response.created_at,
+					};
+				}
+
+				returnData.push({ 
+					json: outputData,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'user' && operation === 'get') {
 				const credentials = await this.getCredentials('StraicoApi');
 				const response = await this.helpers.httpRequest({
@@ -1252,7 +1373,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'models' && operation === 'getAll') {
 				const credentials = await this.getCredentials('StraicoApi');
 				const response = await this.helpers.httpRequest({
@@ -1266,7 +1392,7 @@ export class Straico implements INodeType {
 					// Procesar modelos de chat
 					if (Array.isArray(response.data.chat)) {
 						for (const model of response.data.chat) {
-							returnData.push({ json: { ...model, type: 'chat' } });
+							returnData.push({ json: { ...model, type: 'chat' }, pairedItem: { item: i } });
 						}
 					}
 					// Procesar modelos de imagen (puede ser array de arrays)
@@ -1274,15 +1400,15 @@ export class Straico implements INodeType {
 						for (const imageGroup of response.data.image) {
 							if (Array.isArray(imageGroup)) {
 								for (const model of imageGroup) {
-									returnData.push({ json: { ...model, type: 'image' } });
+									returnData.push({ json: { ...model, type: 'image' }, pairedItem: { item: i } });
 								}
 							} else if (imageGroup) {
-								returnData.push({ json: { ...imageGroup, type: 'image' } });
+								returnData.push({ json: { ...imageGroup, type: 'image' }, pairedItem: { item: i } });
 							}
 						}
 					}
 				} else {
-					returnData.push({ json: response });
+					returnData.push({ json: response, pairedItem: { item: i } });
 				}
 			} else if (resource === 'prompt' && operation === 'completion') {
 				const models = this.getNodeParameter('models', i, []);
@@ -1292,6 +1418,7 @@ export class Straico implements INodeType {
 					string,
 					any
 				>;
+				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
 				const credentials = await this.getCredentials('StraicoApi');
 
 				// Validación exclusiva
@@ -1384,7 +1511,26 @@ export class Straico implements INodeType {
 					body,
 					json: true,
 				});
-				returnData.push({ json: response });
+
+				// Apply simplify if requested
+				let outputData = response;
+				if (simplify && response && typeof response === 'object') {
+					// Simplified version with most important fields
+					outputData = {
+						id: response.id,
+						message: response.message,
+						model: response.model,
+						usage: response.usage,
+						created_at: response.created_at,
+					};
+				}
+
+				returnData.push({ 
+					json: outputData,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'image' && operation === 'generate') {
 				const model = this.getNodeParameter('model', i);
 				const description = this.getNodeParameter('description', i);
@@ -1425,10 +1571,15 @@ export class Straico implements INodeType {
 					body,
 					json: true,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'file' && operation !== 'upload') {
 				// Implementa aquí otras operaciones de file si existen
-				returnData.push({ json: { message: 'Operation not implemented' } });
+				returnData.push({ json: { message: 'Operation not implemented' }, pairedItem: { item: i } });
 			} else if (resource === 'agent' && operation === 'create') {
 				const name = this.getNodeParameter('name', i) as string;
 				const custom_prompt = this.getNodeParameter('custom_prompt', i) as string;
@@ -1447,7 +1598,12 @@ export class Straico implements INodeType {
 					},
 					body,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'get') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const credentials = await this.getCredentials('StraicoApi');
@@ -1458,7 +1614,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'list') {
 				const credentials = await this.getCredentials('StraicoApi');
 				const response = await this.helpers.httpRequest({
@@ -1468,7 +1629,12 @@ export class Straico implements INodeType {
 						Authorization: `Bearer ${credentials.apiKey}`,
 					},
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else if (resource === 'agent' && operation === 'addRag') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const ragId = this.getNodeParameter('ragId', i) as string;
@@ -1484,7 +1650,12 @@ export class Straico implements INodeType {
 					body,
 					json: true,
 				});
-				returnData.push({ json: response });
+				returnData.push({ 
+					json: response,
+					pairedItem: {
+						item: i,
+					},
+				});
 			} else {
 				// fallback to default routing
 				returnData.push(items[i]);

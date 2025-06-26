@@ -1,4 +1,4 @@
-import { IAuthenticateGeneric, ICredentialType, INodeProperties, } from 'n8n-workflow';
+import { IAuthenticateGeneric, ICredentialTestRequest, ICredentialType, INodeProperties, } from 'n8n-workflow';
 
 export class StraicoApi implements ICredentialType {
   name = 'StraicoApi';
@@ -23,6 +23,13 @@ export class StraicoApi implements ICredentialType {
       headers: {
         Authorization: '=Bearer {{$credentials.apiKey}}',
       },
+    },
+  };
+
+  test: ICredentialTestRequest = {
+    request: {
+      baseURL: 'https://api.straico.com',
+      url: '/v0/user',
     },
   };
 }
