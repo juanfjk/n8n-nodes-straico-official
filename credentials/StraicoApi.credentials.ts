@@ -1,7 +1,7 @@
 import { IAuthenticateGeneric, ICredentialTestRequest, ICredentialType, INodeProperties, } from 'n8n-workflow';
 
 export class StraicoApi implements ICredentialType {
-  name = 'StraicoApi';
+  name = 'straicoApi';
   displayName = 'Straico API';
   documentationUrl = 'https://documenter.getpostman.com/view/5900072/2s9YyzddrR';
 
