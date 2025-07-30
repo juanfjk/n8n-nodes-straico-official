@@ -9,6 +9,8 @@ This is an n8n community node. It lets you use **Straico** in your n8n workflows
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
 - [Installation](#installation)  
+  - [Self-Hosted Installation](#self-hosted-installation)
+  - [Cloud Installation](#cloud-installation)
 - [Operations](#operations)  
 - [Credentials](#credentials)  
 - [Compatibility](#compatibility)  
@@ -21,15 +23,49 @@ This is an n8n community node. It lets you use **Straico** in your n8n workflows
 
 ## Installation
 
+### Cloud Installation
+
+> **Note**: Limited to n8n instance owners
+
+Only the n8n instance owner can install and manage verified community nodes. The instance owner is the person who sets up and manages user management. All members of an n8n instance can use already installed community nodes in their workflows.
+
+Admin accounts can also uninstall any community node, verified or unverified. This helps them remove problematic nodes that may affect the instance's health and functionality.
+
+#### Install a Community Node
+
+To install this verified community node:
+
+1. Go to the Canvas and open the nodes panel (either by selecting '+' or pressing Tab)
+2. Search for "Straico". You will see it in the "More from the community" section at the bottom of the nodes panel
+3. Select the node to view detailed information about supported actions
+4. Click "Install". This will install the node for your instance and enable all members to use it
+
+#### Enable Installation of Verified Community Nodes
+
+Some users may not want to show verified community nodes in the nodes panel of their instances. On n8n cloud, instance owners can toggle this in the Cloud Admin Panel.
+
+#### Uninstall a Community Node
+
+To uninstall the community node:
+
+1. Go to Settings > Community nodes
+2. On the node you want to uninstall, select Options (three dots menu)
+3. Select "Uninstall package"
+4. Confirm uninstallation in the modal
+
+### Self-Hosted Installation
+
+For self-hosted n8n instances:
+
 1. Install the community node package:
 
    ```bash
    npm install n8n-nodes-straico-official
    ```
 
-2. Restart your n8n instance (if running locally) to load the new node.
+2. Restart your n8n instance to load the new node
 
-3. In n8n, go to **Settings → Community Nodes** and enable **n8n-nodes-straico-official** if it isn’t already.
+3. In n8n, go to **Settings/Community Nodes** and enable **n8n-nodes-straico-official** if it isn't already
 
 ---
 
@@ -59,7 +95,7 @@ The Straico node supports the following **resources** and **operations**:
 To authenticate requests, you need a **Straico API Key**:
 
 1. Sign up or log in at [Straico](https://straico.com/) and copy your API key from the dashboard.
-2. In n8n, go to **Credentials → New Credential → Straico API**.
+2. In n8n, go to **Credentials/New Credential/Straico API**.
 3. Paste your API key and save.
 
 All node operations will automatically use this credential.

@@ -1,6 +1,6 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
-import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
+import { IExecuteFunctions, NodeOperationError, IRequestOptions, LoggerProxy as Logger } from 'n8n-workflow';
 
 export class StraicoOfficial implements INodeType {
 	description: INodeTypeDescription = {
@@ -85,7 +85,7 @@ export class StraicoOfficial implements INodeType {
 						routing: {
 							request: {
 								method: 'GET',
-								url: '/v0/user',
+								uri: '/v0/user',
 							},
 						},
 					},
@@ -110,7 +110,7 @@ export class StraicoOfficial implements INodeType {
 						routing: {
 							request: {
 								method: 'GET',
-								url: '/v1/models',
+								uri: '/v1/models',
 							},
 						},
 					},
@@ -135,7 +135,7 @@ export class StraicoOfficial implements INodeType {
 						routing: {
 							request: {
 								method: 'POST',
-								url: '/v1/prompt/completion',
+								uri: '/v1/prompt/completion',
 							},
 						},
 					},
@@ -335,7 +335,7 @@ export class StraicoOfficial implements INodeType {
 						routing: {
 							request: {
 								method: 'POST',
-								url: '/v0/image/generation',
+								uri: '/v0/image/generation',
 							},
 						},
 					},
@@ -662,7 +662,7 @@ export class StraicoOfficial implements INodeType {
 						routing: {
 							request: {
 								method: 'POST',
-								url: '/v0/file/upload',
+								uri: '/v0/file/upload',
 								body: {
 									file: '={{ $parameter["file"] }}',
 								},
@@ -946,61 +946,37 @@ export class StraicoOfficial implements INodeType {
 		],
 	};
 
-	//add loadOptions
-	/*   methods = {
-		loadOptions: {
-			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const response = await this.helpers.request({
-					method: 'GET',
-					url: '/v1/models',
-					json: true,
-				});
-
-				if (!response.success || !response.data.text) {
-					throw new Error('Failed to load models');
-				}
-
-				return response.data.text.map((model: any) => ({
-					name: model.name,
-					value: model.model,
-				}));
-			},
-		},
-	}; */
-
 	methods = {
 		loadOptions: {
 			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
-					const credentials = await this.getCredentials('straicoApi');
-
-					if (!credentials?.apiKey) {
-						throw new NodeOperationError(this.getNode(), 'No API key provided in credentials');
-					}
-
-					const response = await this.helpers.httpRequest({
+					const options: IRequestOptions = {
 						method: 'GET',
-						url: 'https://api.straico.com/v1/models',
+						uri: '/v1/models',
 						headers: {
 							Accept: 'application/json',
 							'Content-Type': 'application/json',
-							Authorization: `Bearer ${credentials.apiKey}`,
 						},
 						json: true,
-					});
+					};
+
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'straicoApi',
+						options,
+					);
 
 					if (!response?.success || !response?.data?.chat) {
 						throw new NodeOperationError(this.getNode(), 'Invalid response format from the API');
 					}
 
-					// Map the chat models from the response
 					return response.data.chat.map((model: any) => ({
 						name: model.name,
 						value: model.model,
 						description: `Max tokens: ${model.max_output}, Price: ${model.pricing.coins} coins per ${model.pricing.words} words`,
 					}));
 				} catch (error) {
-					console.error('Error loading models:', error);
+					Logger.error('Error loading models in "Straico" node', { error: error.message });
 					throw new NodeOperationError(this.getNode(), `Failed to load models: ${error.message}`);
 				}
 			},
@@ -1030,16 +1006,13 @@ export class StraicoOfficial implements INodeType {
 				const bufferData = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
 				const fileName = binaryData.fileName || 'uploaded_file.pdf';
 
-				const credentials = await this.getCredentials('straicoApi');
-
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: 'https://api.straico.com/v0/file/upload',
+					uri: 'https://api.straico.com/v0/file/upload',
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'multipart/form-data',
 					},
-					body: {
+					formData: {
 						file: {
 							value: bufferData,
 							options: {
@@ -1047,7 +1020,13 @@ export class StraicoOfficial implements INodeType {
 							},
 						},
 					},
-				});
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
 
 				returnData.push({ 
 					json: response,
@@ -1063,15 +1042,12 @@ export class StraicoOfficial implements INodeType {
 					string,
 					any
 				>;
-				const credentials = await this.getCredentials('straicoApi');
 				
-				// Prepare form data for RAG creation
 				const formData: Record<string, any> = {
 					name,
 					description,
 				};
 				
-				// Add chunking options if provided
 				if (chunkingOptions.chunking_method) {
 					formData.chunking_method = chunkingOptions.chunking_method;
 					if (chunkingOptions.chunk_size !== undefined) {
@@ -1090,7 +1066,6 @@ export class StraicoOfficial implements INodeType {
 						chunkingOptions.separators !== undefined &&
 						chunkingOptions.chunking_method === 'recursive'
 					) {
-						// Convert comma-separated string to JSON array string
 						const separatorsArr = chunkingOptions.separators
 							.split(',')
 							.map((s: string) => s.trim());
@@ -1127,15 +1102,20 @@ export class StraicoOfficial implements INodeType {
 					},
 				};
 				
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: 'https://api.straico.com/v0/rag',
+					uri: 'https://api.straico.com/v0/rag',
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'multipart/form-data',
 					},
-					body: formData,
-				});
+					formData,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1143,14 +1123,17 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else if (resource === 'rag' && operation === 'list') {
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: 'https://api.straico.com/v0/rag/user',
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: 'https://api.straico.com/v0/rag/user',
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1159,14 +1142,18 @@ export class StraicoOfficial implements INodeType {
 				});
 			} else if (resource === 'rag' && operation === 'get') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: `https://api.straico.com/v0/rag/${ragId}`,
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: `https://api.straico.com/v0/rag/${ragId}`,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1176,7 +1163,6 @@ export class StraicoOfficial implements INodeType {
 			} else if (resource === 'rag' && operation === 'update') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
 				const fileField = this.getNodeParameter('files', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
 				
 				const binaryData = items[i].binary?.[fileField];
 				if (!binaryData) {
@@ -1197,15 +1183,21 @@ export class StraicoOfficial implements INodeType {
 					},
 				};
 				
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'PUT',
-					url: `https://api.straico.com/v0/rag/${ragId}`,
+					uri: `https://api.straico.com/v0/rag/${ragId}`,
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'multipart/form-data',
 					},
-					body: formData,
-				});
+					formData,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1214,14 +1206,18 @@ export class StraicoOfficial implements INodeType {
 				});
 			} else if (resource === 'rag' && operation === 'delete') {
 				const ragId = this.getNodeParameter('ragId', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				
+				const options: IRequestOptions = {
 					method: 'DELETE',
-					url: `https://api.straico.com/v0/rag/${ragId}`,
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: `https://api.straico.com/v0/rag/${ragId}`,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1238,7 +1234,7 @@ export class StraicoOfficial implements INodeType {
 				const lambda_mult = this.getNodeParameter('lambda_mult', i) as number;
 				const score_threshold = this.getNodeParameter('score_threshold', i) as number;
 				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
-				const credentials = await this.getCredentials('straicoApi');
+
 				const body: any = { prompt, model };
 				if (search_type) body.search_type = search_type;
 				if (k) body.k = k;
@@ -1246,23 +1242,23 @@ export class StraicoOfficial implements INodeType {
 				if (lambda_mult) body.lambda_mult = lambda_mult;
 				if (score_threshold) body.score_threshold = score_threshold;
 
-				// Log de depuración para ver el body antes de la petición
-				console.log('Prompt Completion Body:', JSON.stringify(body, null, 2));
-
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: `https://api.straico.com/v0/rag/${ragId}/prompt`,
+					uri: `https://api.straico.com/v0/rag/${ragId}/prompt`,
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body,
-				});
+					form: body,
+				};
 
-				// Apply simplify if requested
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				let outputData = response;
 				if (simplify && response && typeof response === 'object') {
-					// Simplified version with most important fields
 					outputData = {
 						id: response.id,
 						message: response.message,
@@ -1285,18 +1281,24 @@ export class StraicoOfficial implements INodeType {
 				const default_llm = this.getNodeParameter('default_llm', i) as string;
 				const description = this.getNodeParameter('description', i) as string;
 				const tags = this.getNodeParameter('tags', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
 				const body: any = { name, custom_prompt, default_llm, description };
 				if (tags) body.tags = JSON.parse(tags);
-				const response = await this.helpers.httpRequest({
+
+				const options: IRequestOptions = {
 					method: 'PUT',
-					url: `https://stapi.straico.com/v0/agent/${agentId}`,
+					uri: `https://stapi.straico.com/v0/agent/${agentId}`,
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body,
-				});
+					form: body,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1305,14 +1307,18 @@ export class StraicoOfficial implements INodeType {
 				});
 			} else if (resource === 'agent' && operation === 'delete') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				
+				const options: IRequestOptions = {
 					method: 'DELETE',
-					url: `https://api.straico.com/v0/agent/${agentId}`,
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: `https://api.straico.com/v0/agent/${agentId}`,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1328,27 +1334,30 @@ export class StraicoOfficial implements INodeType {
 				const lambda_mult = this.getNodeParameter('lambda_mult', i) as number;
 				const score_threshold = this.getNodeParameter('score_threshold', i) as number;
 				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
-				const credentials = await this.getCredentials('straicoApi');
+
 				const body: any = { prompt };
 				if (search_type) body.search_type = search_type;
 				if (k) body.k = k;
 				if (fetch_k) body.fetch_k = fetch_k;
 				if (lambda_mult) body.lambda_mult = lambda_mult;
 				if (score_threshold) body.score_threshold = score_threshold;
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: `https://api.straico.com/v0/agent/${agentId}/prompt`,
+					uri: `https://api.straico.com/v0/agent/${agentId}/prompt`,
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body,
-				});
+					form: body,
+				};
 
-				// Apply simplify if requested
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				let outputData = response;
 				if (simplify && response && typeof response === 'object') {
-					// Simplified version with most important fields
 					outputData = {
 						id: response.id,
 						message: response.message,
@@ -1365,14 +1374,17 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else if (resource === 'user' && operation === 'get') {
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: 'https://api.straico.com/v0/user',
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: 'https://api.straico.com/v0/user',
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1380,22 +1392,23 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else if (resource === 'models' && operation === 'getAll') {
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: 'https://api.straico.com/v1/models',
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: 'https://api.straico.com/v1/models',
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				if (response.data) {
-					// Procesar modelos de chat
 					if (Array.isArray(response.data.chat)) {
 						for (const model of response.data.chat) {
 							returnData.push({ json: { ...model, type: 'chat' }, pairedItem: { item: i } });
 						}
 					}
-					// Procesar modelos de imagen (puede ser array de arrays)
 					if (Array.isArray(response.data.image)) {
 						for (const imageGroup of response.data.image) {
 							if (Array.isArray(imageGroup)) {
@@ -1419,9 +1432,7 @@ export class StraicoOfficial implements INodeType {
 					any
 				>;
 				const simplify = this.getNodeParameter('simplify', i, false) as boolean;
-				const credentials = await this.getCredentials('straicoApi');
 
-				// Validación exclusiva
 				const hasModels = Array.isArray(models) && models.length > 0;
 				const isSmartSelectorObj =
 					smartLlmSelector &&
@@ -1451,7 +1462,6 @@ export class StraicoOfficial implements INodeType {
 					body.smart_llm_selector = smartLlmSelector;
 				}
 
-				// Procesar file_urls, youtube_urls, images correctamente
 				const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
 				let imagesArr: string[] = [];
 				if (
@@ -1462,7 +1472,6 @@ export class StraicoOfficial implements INodeType {
 						.split(',')
 						.map((url: string) => url.trim())
 						.filter((url: string) => url);
-					// Separar imágenes de archivos
 					const fileUrlsArr = arr.filter((url: string) => {
 						const isImage = imageExtensions.some((ext) => url.toLowerCase().includes(ext));
 						if (isImage) imagesArr.push(url);
@@ -1489,7 +1498,6 @@ export class StraicoOfficial implements INodeType {
 				}
 				if (imagesArr.length > 0) body.images = imagesArr;
 
-				// Agregar el resto de los campos adicionales (booleanos, números, etc.)
 				['temperature', 'max_tokens', 'replace_failed_models', 'display_transcripts'].forEach(
 					(field) => {
 						if (additionalFields[field] !== undefined) {
@@ -1498,24 +1506,24 @@ export class StraicoOfficial implements INodeType {
 					},
 				);
 
-				// Log de depuración para ver el body antes de la petición
-				console.log('Prompt Completion Body:', JSON.stringify(body, null, 2));
-
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: 'https://api.straico.com/v1/prompt/completion',
+					uri: 'https://api.straico.com/v1/prompt/completion',
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/json',
 					},
 					body,
 					json: true,
-				});
+				};
 
-				// Apply simplify if requested
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				let outputData = response;
 				if (simplify && response && typeof response === 'object') {
-					// Simplified version with most important fields
 					outputData = {
 						id: response.id,
 						message: response.message,
@@ -1542,7 +1550,7 @@ export class StraicoOfficial implements INodeType {
 				if (enhanceValue === true) {
 					customEnhancer = this.getNodeParameter('customEnhancer', i, undefined);
 				}
-				const credentials = await this.getCredentials('straicoApi');
+
 				const body: any = {
 					model,
 					description,
@@ -1561,16 +1569,22 @@ export class StraicoOfficial implements INodeType {
 					body.enhance = true;
 					if (customEnhancer) body.customEnhancer = customEnhancer;
 				}
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: 'https://api.straico.com/v0/image/generation',
+					uri: 'https://api.straico.com/v0/image/generation',
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/json',
 					},
 					body,
 					json: true,
-				});
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1578,7 +1592,6 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else if (resource === 'file' && operation !== 'upload') {
-				// Implementa aquí otras operaciones de file si existen
 				returnData.push({ json: { message: 'Operation not implemented' }, pairedItem: { item: i } });
 			} else if (resource === 'agent' && operation === 'create') {
 				const name = this.getNodeParameter('name', i) as string;
@@ -1586,18 +1599,25 @@ export class StraicoOfficial implements INodeType {
 				const default_llm = this.getNodeParameter('default_llm', i) as string;
 				const description = this.getNodeParameter('description', i) as string;
 				const tags = this.getNodeParameter('tags', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
+
 				const body: any = { name, custom_prompt, default_llm, description };
 				if (tags) body.tags = tags;
-				const response = await this.helpers.httpRequest({
+
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: 'https://api.straico.com/v0/agent',
+					uri: 'https://api.straico.com/v0/agent',
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body,
-				});
+					form: body,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1606,14 +1626,18 @@ export class StraicoOfficial implements INodeType {
 				});
 			} else if (resource === 'agent' && operation === 'get') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: `https://api.straico.com/v0/agent/${agentId}`,
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: `https://api.straico.com/v0/agent/${agentId}`,
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1621,14 +1645,17 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else if (resource === 'agent' && operation === 'list') {
-				const credentials = await this.getCredentials('straicoApi');
-				const response = await this.helpers.httpRequest({
+				const options: IRequestOptions = {
 					method: 'GET',
-					url: 'https://api.straico.com/v0/agent/',
-					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
-					},
-				});
+					uri: 'https://api.straico.com/v0/agent/',
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1638,18 +1665,24 @@ export class StraicoOfficial implements INodeType {
 			} else if (resource === 'agent' && operation === 'addRag') {
 				const agentId = this.getNodeParameter('agent_id', i) as string;
 				const ragId = this.getNodeParameter('ragId', i) as string;
-				const credentials = await this.getCredentials('straicoApi');
 				const body = { rag: ragId };
-				const response = await this.helpers.httpRequest({
+
+				const options: IRequestOptions = {
 					method: 'POST',
-					url: `https://stapi.straico.com/v0/agent/${agentId}/rag`,
+					uri: `https://stapi.straico.com/v0/agent/${agentId}/rag`,
 					headers: {
-						Authorization: `Bearer ${credentials.apiKey}`,
 						'Content-Type': 'application/json',
 					},
 					body,
 					json: true,
-				});
+				};
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'straicoApi',
+					options,
+				);
+
 				returnData.push({ 
 					json: response,
 					pairedItem: {
@@ -1657,7 +1690,6 @@ export class StraicoOfficial implements INodeType {
 					},
 				});
 			} else {
-				// fallback to default routing
 				returnData.push(items[i]);
 			}
 		}
