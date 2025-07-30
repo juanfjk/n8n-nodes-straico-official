@@ -29,7 +29,7 @@ export class StraicoApi implements ICredentialType {
   test: ICredentialTestRequest = {
     request: {
       baseURL: 'https://api.straico.com',
-      uri: '/v0/user',
+      url: '/v0/user',
     },
   };
 }
