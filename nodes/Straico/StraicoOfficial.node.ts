@@ -952,7 +952,7 @@ export class StraicoOfficial implements INodeType {
 				try {
 					const options: IHttpRequestOptions = {
 						method: 'GET',
-						url: '/v1/models',
+						url: 'https://api.straico.com/v1/models',
 						headers: {
 							Accept: 'application/json',
 							'Content-Type': 'application/json',
